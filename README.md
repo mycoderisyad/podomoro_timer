@@ -18,4 +18,6 @@ Mobile:
 flutter run
 ```
 
+<img width="691" height="1536" alt="image" src="https://github.com/user-attachments/assets/2aecec26-f896-4eb5-ba8c-107ed2d287b8" />
+
 
