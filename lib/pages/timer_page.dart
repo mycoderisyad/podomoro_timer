@@ -3,17 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../core/theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../l10n/l10n.dart';
 import '../models/timer_mode.dart';
 import '../models/music_track.dart';
 import '../models/app_settings.dart';
 import '../models/statistics.dart';
-import '../widgets/timer_display.dart';
+import '../widgets/duration_picker_sheet.dart';
+import '../widgets/timer_circular_display.dart';
+import '../widgets/timer_controls.dart';
+import '../widgets/music_player_section.dart';
+import '../widgets/music_queue_sheet.dart';
+import '../services/notification_audio_service.dart';
+import '../services/settings_service.dart';
+import '../services/statistics_service.dart';
 import 'music_selection_page.dart';
 import 'statistics_page.dart';
 import 'settings_page.dart';
 
 class TimerPage extends StatefulWidget {
-  const TimerPage({super.key});
+  final AppSettings initialSettings;
+  final ValueChanged<AppSettings> onSettingsChanged;
+
+  const TimerPage({
+    super.key,
+    required this.initialSettings,
+    required this.onSettingsChanged,
+  });
 
   @override
   State<TimerPage> createState() => _TimerPageState();
@@ -22,53 +37,84 @@ class TimerPage extends StatefulWidget {
 class _TimerPageState extends State<TimerPage> {
   Timer? _timer;
   late AudioPlayer _audioPlayer;
+  late AudioPlayer _notificationPlayer;
   int _secondsRemaining = 1500;
   bool _isRunning = false;
   TimerMode _currentMode = TimerMode.focus;
-  MusicTrack? _selectedMusic;
+  List<MusicTrack> _musicQueue = [];
+  int _currentQueueIndex = 0;
   bool _isMusicPlaying = false;
   late AppSettings _settings;
   late Statistics _statistics;
 
-  static const List<int> _focusDurationOptions = [900, 1200, 1500, 1800, 2100, 2700, 3000];
-  static const List<int> _breakDurationOptions = [180, 300, 420, 600, 900];
+  static const List<int> _focusDurationOptions = [
+    900, 1200, 1500, 1800, 2100, 2700, 3000,
+  ];
+  static const List<int> _breakDurationOptions = [
+    180, 300, 420, 600, 900,
+  ];
 
   @override
   void initState() {
     super.initState();
-    _settings = AppSettings();
+    _settings = widget.initialSettings;
     _statistics = Statistics();
     _audioPlayer = AudioPlayer();
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    _notificationPlayer = AudioPlayer();
+    _audioPlayer.setReleaseMode(ReleaseMode.stop);
     _audioPlayer.setVolume(_settings.defaultVolume);
     _secondsRemaining = _settings.focusDuration;
 
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (mounted) {
-        setState(() {
-          _isMusicPlaying = state == PlayerState.playing;
-        });
+        setState(() => _isMusicPlaying = state == PlayerState.playing);
       }
     });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (_shouldSyncMusicToTimer) {
+        _playNextInQueue();
+      }
+    });
+
+    _runAutoClear();
+  }
+
+  Future<void> _runAutoClear() async {
+    await StatisticsService.runAutoClearIfNeeded(_settings.autoClearSchedule);
+  }
+
+  bool get _shouldSyncMusicToTimer =>
+      _settings.syncMusicWithTimer && _isRunning && _musicQueue.isNotEmpty;
+
+  void _applyMusicSyncState() {
+    if (_musicQueue.isEmpty) return;
+
+    if (_shouldSyncMusicToTimer) {
+      unawaited(_playOrResumeMusic());
+      return;
+    }
+
+    if (_audioPlayer.state == PlayerState.playing) {
+      unawaited(_pauseMusic());
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _audioPlayer.dispose();
+    _notificationPlayer.dispose();
     super.dispose();
   }
+
+  // --- Timer Controls ---
 
   void _startTimer() {
     if (_timer != null && _timer!.isActive) return;
 
-    setState(() {
-      _isRunning = true;
-    });
-
-    if (_settings.syncMusicWithTimer && _selectedMusic != null) {
-      _playOrResumeMusic();
-    }
+    setState(() => _isRunning = true);
+    _applyMusicSyncState();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
@@ -82,9 +128,7 @@ class _TimerPageState extends State<TimerPage> {
         });
       } else {
         _timer?.cancel();
-        setState(() {
-          _isRunning = false;
-        });
+        setState(() => _isRunning = false);
         _onTimerComplete();
       }
     });
@@ -92,13 +136,8 @@ class _TimerPageState extends State<TimerPage> {
 
   void _pauseTimer() {
     _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-    });
-
-    if (_settings.syncMusicWithTimer && _isMusicPlaying) {
-      _pauseMusic();
-    }
+    setState(() => _isRunning = false);
+    _applyMusicSyncState();
   }
 
   void _resetTimer() {
@@ -109,10 +148,7 @@ class _TimerPageState extends State<TimerPage> {
           ? _settings.focusDuration
           : _settings.breakDuration;
     });
-
-    if (_settings.syncMusicWithTimer && _isMusicPlaying) {
-      _pauseMusic();
-    }
+    _applyMusicSyncState();
   }
 
   void _switchMode() {
@@ -127,50 +163,138 @@ class _TimerPageState extends State<TimerPage> {
   }
 
   void _onTimerComplete() {
+    final l10n = context.l10n;
     _statistics.checkAndResetDaily();
+    _applyMusicSyncState();
+    unawaited(_playNotificationSound());
+
     if (_currentMode == TimerMode.focus) {
-      setState(() {
-        _statistics.completedSessions++;
-      });
+      setState(() => _statistics.completedSessions++);
+
+      StatisticsService.addOrUpdateToday(
+        focusSeconds: _settings.focusDuration,
+        completedSessions: 1,
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Focus session complete! Time for a break.'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(l10n.focusSessionCompleteMessage),
+          duration: const Duration(seconds: 3),
         ),
       );
+
       if (_settings.autoStartBreak) {
         _switchMode();
         _startTimer();
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Break time over! Ready to focus again?'),
-          duration: Duration(seconds: 3),
-        ),
+      StatisticsService.addOrUpdateToday(
+        breakSeconds: _settings.breakDuration,
       );
+
+      _showBreakEndDialog();
     }
   }
 
+  Future<void> _playNotificationSound() async {
+    if (!_settings.soundEnabled) return;
+    try {
+      await NotificationAudioService.playAsset(
+        player: _notificationPlayer,
+        assetPath: _settings.notificationSound,
+        volume: _settings.notificationVolume,
+      );
+    } catch (error) {
+      debugPrint('Failed to play notification sound: $error');
+    }
+  }
+
+  Future<void> _showBreakEndDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.breakEndedTitle),
+        content: Text(context.l10n.breakEndedMessage),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Music Controls ---
+
   Future<void> _playOrResumeMusic() async {
-    if (_selectedMusic == null) return;
+    if (_musicQueue.isEmpty) return;
 
     try {
       if (_audioPlayer.state == PlayerState.paused) {
         await _audioPlayer.resume();
       } else {
-        await _audioPlayer.stop();
-        await _audioPlayer.play(AssetSource(_selectedMusic!.assetPath));
+        await _playCurrentTrack();
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error playing music: ${e.toString()}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+    } catch (_) {
+      _playNextInQueue();
+    }
+  }
+
+  Future<void> _playCurrentTrack() async {
+    if (_musicQueue.isEmpty) return;
+
+    final currentTrack = _musicQueue[_currentQueueIndex];
+
+    try {
+      await _audioPlayer.stop();
+
+      if (currentTrack.isLocalFile) {
+        await _audioPlayer.play(DeviceFileSource(currentTrack.filePath!));
+      } else if (currentTrack.assetPath.isNotEmpty) {
+        await _audioPlayer.play(AssetSource(currentTrack.assetPath));
       }
+    } catch (_) {
+      _playNextInQueue();
+    }
+  }
+
+  void _playNextInQueue() {
+    if (_musicQueue.isEmpty) return;
+
+    setState(() {
+      _currentQueueIndex = (_currentQueueIndex + 1) % _musicQueue.length;
+    });
+
+    if (_shouldSyncMusicToTimer) {
+      _playCurrentTrack();
+    }
+  }
+
+  void _playPreviousInQueue() {
+    if (_musicQueue.isEmpty) return;
+
+    setState(() {
+      _currentQueueIndex =
+          (_currentQueueIndex - 1 + _musicQueue.length) % _musicQueue.length;
+    });
+
+    if (_shouldSyncMusicToTimer) {
+      _playCurrentTrack();
+    }
+  }
+
+  void _jumpToTrack(int index) {
+    if (_musicQueue.isEmpty || index < 0 || index >= _musicQueue.length) {
+      return;
+    }
+
+    setState(() => _currentQueueIndex = index);
+
+    if (_isRunning && _settings.syncMusicWithTimer) {
+      _playCurrentTrack();
     }
   }
 
@@ -178,25 +302,72 @@ class _TimerPageState extends State<TimerPage> {
     await _audioPlayer.pause();
   }
 
+  Future<void> _replaceMusicQueue(List<MusicTrack> queue) async {
+    await _audioPlayer.stop();
+
+    if (!mounted) return;
+
+    setState(() {
+      _musicQueue = queue;
+      _currentQueueIndex = 0;
+      _isMusicPlaying = false;
+    });
+
+    _applyMusicSyncState();
+  }
+
+  Future<void> _handleSyncMusicChanged(bool value) async {
+    setState(() => _settings.syncMusicWithTimer = value);
+    await SettingsService.saveSettings(_settings);
+
+    if (value) {
+      _applyMusicSyncState();
+      return;
+    }
+
+    if (_audioPlayer.state == PlayerState.playing) {
+      await _pauseMusic();
+    }
+  }
+
+  // --- Navigation ---
+
+  void _showQueueBottomSheet() {
+    if (_musicQueue.isEmpty) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => MusicQueueSheet(
+        musicQueue: _musicQueue,
+        currentQueueIndex: _currentQueueIndex,
+        isMusicPlaying: _isMusicPlaying,
+        onJumpToTrack: _jumpToTrack,
+      ),
+    );
+  }
+
   Future<void> _navigateToMusicSelection() async {
-    final result = await Navigator.push<MusicTrack>(
+    final result = await Navigator.push<List<MusicTrack>>(
       context,
-      MaterialPageRoute(builder: (context) => const MusicSelectionPage()),
+      MaterialPageRoute(
+        builder: (context) => MusicSelectionPage(currentQueue: _musicQueue),
+      ),
     );
 
     if (result != null && mounted) {
-      setState(() {
-        _selectedMusic = result;
-      });
+      await _replaceMusicQueue(result);
     }
   }
 
   Future<void> _navigateToStatistics() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => StatisticsPage(statistics: _statistics),
-      ),
+      MaterialPageRoute(builder: (context) => const StatisticsPage()),
     );
   }
 
@@ -213,6 +384,9 @@ class _TimerPageState extends State<TimerPage> {
         _settings = result;
         _audioPlayer.setVolume(_settings.defaultVolume);
       });
+      await SettingsService.saveSettings(_settings);
+      widget.onSettingsChanged(_settings);
+      _applyMusicSyncState();
     }
   }
 
@@ -227,13 +401,14 @@ class _TimerPageState extends State<TimerPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => _DurationPickerSheet(
+      builder: (context) => DurationPickerSheet(
         title: _currentMode == TimerMode.focus
-            ? 'Focus Duration'
-            : 'Break Duration',
+            ? context.l10n.focusDuration
+            : context.l10n.breakDuration,
         options: options,
         currentValue: currentDuration,
         onSelected: (duration) {
@@ -245,14 +420,18 @@ class _TimerPageState extends State<TimerPage> {
             }
             _secondsRemaining = duration;
           });
+          SettingsService.saveSettings(_settings);
           Navigator.pop(context);
         },
       ),
     );
   }
 
+  // --- Build UI ---
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLargeScreen = screenWidth > AppConstants.largeScreenBreakpoint;
@@ -264,6 +443,7 @@ class _TimerPageState extends State<TimerPage> {
       appBar: AppBar(
         backgroundColor: AppColors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         title: const Text(
           "P O M O D O R O",
@@ -276,14 +456,18 @@ class _TimerPageState extends State<TimerPage> {
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(Icons.bar_chart_rounded, color: AppColors.textPrimary),
+            icon: const Icon(Icons.bar_chart_rounded),
+            color: AppColors.textPrimary,
+            iconSize: 28,
             onPressed: _navigateToStatistics,
+            tooltip: l10n.statisticsTooltip,
           ),
           IconButton(
-            icon:
-                const Icon(Icons.settings_rounded, color: AppColors.textPrimary),
+            icon: const Icon(Icons.settings_rounded),
+            color: AppColors.textPrimary,
+            iconSize: 28,
             onPressed: _navigateToSettings,
+            tooltip: l10n.settingsTooltip,
           ),
           const SizedBox(width: 8),
         ],
@@ -304,9 +488,13 @@ class _TimerPageState extends State<TimerPage> {
           const Spacer(flex: 1),
           _buildTimerSection(isLargeScreen, false),
           const Spacer(flex: 1),
-          _buildControlButtons(),
-          const SizedBox(height: 16),
-          _buildSwitchModeButton(),
+          TimerControls(
+            isRunning: _isRunning,
+            currentMode: _currentMode,
+            onStartPause: _isRunning ? _pauseTimer : _startTimer,
+            onReset: _resetTimer,
+            onSwitchMode: _switchMode,
+          ),
           const SizedBox(height: 24),
           _buildMusicSection(isLargeScreen),
           const SizedBox(height: 24),
@@ -331,9 +519,13 @@ class _TimerPageState extends State<TimerPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildControlButtons(),
-                const SizedBox(height: 12),
-                _buildSwitchModeButton(),
+                TimerControls(
+                  isRunning: _isRunning,
+                  currentMode: _currentMode,
+                  onStartPause: _isRunning ? _pauseTimer : _startTimer,
+                  onReset: _resetTimer,
+                  onSwitchMode: _switchMode,
+                ),
                 const SizedBox(height: 12),
                 _buildMusicSection(isLargeScreen),
               ],
@@ -345,336 +537,39 @@ class _TimerPageState extends State<TimerPage> {
   }
 
   Widget _buildTimerSection(bool isLargeScreen, bool isLandscape) {
-    final timerSize = isLandscape
-        ? 180.0
-        : (isLargeScreen ? AppConstants.timerSizeLarge : AppConstants.timerSizeSmall);
-    final fontSize = isLandscape
-        ? 48.0
-        : (isLargeScreen ? AppConstants.timerFontSizeLarge : AppConstants.timerFontSizeSmall);
-
-    return GestureDetector(
-      onTap: _isRunning ? null : _showDurationPicker,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: timerSize,
-            height: timerSize,
-            child: CircularProgressIndicator(
-              value: 1 -
-                  (_secondsRemaining /
-                      (_currentMode == TimerMode.focus
-                          ? _settings.focusDuration
-                          : _settings.breakDuration)),
-              strokeWidth: AppConstants.progressStrokeWidth,
-              strokeCap: StrokeCap.round,
-              backgroundColor: AppColors.surfaceLight,
-              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _currentMode == TimerMode.focus ? 'FOCUS' : 'BREAK',
-                style: const TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 3,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              TimerDisplay(
-                seconds: _secondsRemaining,
-                fontSize: fontSize,
-                color: AppColors.textPrimary,
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Session #${_statistics.completedSessions}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionButton(
-            icon: _isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            label: _isRunning ? 'Pause' : 'Start',
-            onPressed: _isRunning ? _pauseTimer : _startTimer,
-            isPrimary: true,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _ActionButton(
-            icon: Icons.refresh_rounded,
-            label: 'Reset',
-            onPressed: _resetTimer,
-            isPrimary: false,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitchModeButton() {
-    final targetMode =
-        _currentMode == TimerMode.focus ? 'Break' : 'Focus';
-    return SizedBox(
-      width: double.infinity,
-      child: _ActionButton(
-        icon: Icons.swap_horiz_rounded,
-        label: 'Switch to $targetMode',
-        onPressed: _switchMode,
-        isPrimary: false,
-        isFullWidth: true,
-      ),
+    return TimerCircularDisplay(
+      isLargeScreen: isLargeScreen,
+      isLandscape: isLandscape,
+      isRunning: _isRunning,
+      currentMode: _currentMode,
+      secondsRemaining: _secondsRemaining,
+      focusDuration: _settings.focusDuration,
+      breakDuration: _settings.breakDuration,
+      completedSessions: _statistics.completedSessions,
+      onTimerTapped: _showDurationPicker,
     );
   }
 
   Widget _buildMusicSection(bool isLargeScreen) {
-    return Container(
-      width: isLargeScreen ? 500 : double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAccent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.music_note_rounded,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: _navigateToMusicSelection,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedMusic?.title ?? "No Music Selected",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Text(
-                        "Tap to select",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Switch(
-                value: _settings.syncMusicWithTimer,
-                onChanged: _selectedMusic != null
-                    ? (value) {
-                        setState(() {
-                          _settings.syncMusicWithTimer = value;
-                        });
-                      }
-                    : null,
-                activeTrackColor: AppColors.primary,
-              ),
-            ],
-          ),
-          if (_selectedMusic != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.volume_down_rounded,
-                  size: 18,
-                  color: AppColors.textSecondary,
-                ),
-                Expanded(
-                  child: Slider(
-                    value: _settings.defaultVolume,
-                    onChanged: (value) {
-                      setState(() => _settings.defaultVolume = value);
-                      _audioPlayer.setVolume(value);
-                    },
-                  ),
-                ),
-                Text(
-                  '${(_settings.defaultVolume * 100).round()}%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-  final bool isPrimary;
-  final bool isFullWidth;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    required this.isPrimary,
-    this.isFullWidth = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isPrimary ? AppColors.primary : AppColors.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: isPrimary ? AppColors.white : AppColors.textPrimary,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: isPrimary ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DurationPickerSheet extends StatelessWidget {
-  final String title;
-  final List<int> options;
-  final int currentValue;
-  final ValueChanged<int> onSelected;
-
-  const _DurationPickerSheet({
-    required this.title,
-    required this.options,
-    required this.currentValue,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: options.map((duration) {
-              final isSelected = currentValue == duration;
-              final minutes = duration ~/ 60;
-              return GestureDetector(
-                onTap: () => onSelected(duration),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.secondary,
-                      width: 2,
-                    ),
-                  ),
-                  child: Text(
-                    '$minutes min',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
+    return MusicPlayerSection(
+      isLargeScreen: isLargeScreen,
+      musicQueue: _musicQueue,
+      currentQueueIndex: _currentQueueIndex,
+      isMusicPlaying: _isMusicPlaying,
+      isRunning: _isRunning,
+      syncMusicWithTimer: _settings.syncMusicWithTimer,
+      defaultVolume: _settings.defaultVolume,
+      onShowQueue: _showQueueBottomSheet,
+      onNavigateToMusicSelection: _navigateToMusicSelection,
+      onPlayPrevious: _playPreviousInQueue,
+      onPlayNext: _playNextInQueue,
+      onSyncChanged: _handleSyncMusicChanged,
+      onJumpToTrack: _jumpToTrack,
+      onVolumeChanged: (value) {
+        setState(() => _settings.defaultVolume = value);
+        _audioPlayer.setVolume(value);
+        SettingsService.saveSettings(_settings);
+      },
     );
   }
 }

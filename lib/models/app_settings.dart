@@ -7,12 +7,24 @@ class AppSettings {
   bool syncMusicWithTimer;
   double defaultVolume;
 
+  bool soundEnabled;
+  String notificationSound;
+  double notificationVolume;
+
+  String autoClearSchedule;
+  String languageCode;
+
   AppSettings({
     this.focusDuration = AppConstants.defaultFocusDuration,
     this.breakDuration = AppConstants.defaultBreakDuration,
     this.autoStartBreak = false,
     this.syncMusicWithTimer = true,
     this.defaultVolume = AppConstants.defaultVolume,
+    this.soundEnabled = true,
+    this.notificationSound = 'assets/audio/notifications/bell.ogg',
+    this.notificationVolume = 1.0,
+    this.autoClearSchedule = 'never',
+    this.languageCode = 'en',
   });
 
   AppSettings copyWith({
@@ -21,6 +33,11 @@ class AppSettings {
     bool? autoStartBreak,
     bool? syncMusicWithTimer,
     double? defaultVolume,
+    bool? soundEnabled,
+    String? notificationSound,
+    double? notificationVolume,
+    String? autoClearSchedule,
+    String? languageCode,
   }) {
     return AppSettings(
       focusDuration: focusDuration ?? this.focusDuration,
@@ -28,6 +45,11 @@ class AppSettings {
       autoStartBreak: autoStartBreak ?? this.autoStartBreak,
       syncMusicWithTimer: syncMusicWithTimer ?? this.syncMusicWithTimer,
       defaultVolume: defaultVolume ?? this.defaultVolume,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
+      notificationSound: notificationSound ?? this.notificationSound,
+      notificationVolume: notificationVolume ?? this.notificationVolume,
+      autoClearSchedule: autoClearSchedule ?? this.autoClearSchedule,
+      languageCode: languageCode ?? this.languageCode,
     );
   }
 }

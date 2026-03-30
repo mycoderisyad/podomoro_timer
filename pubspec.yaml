@@ -1,7 +1,7 @@
-name: podomoro_timer
-description: "A new Flutter project."
-publish_to: 'none'
-version: 0.1.0
+name: podomoro
+description: "my first flutter app"
+publish_to: "none"
+version: 1.2.1
 
 environment:
   sdk: ^3.10.7
@@ -9,14 +9,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audioplayers: 
+  flutter_localizations:
+    sdk: flutter
+
+  audioplayers: ^6.5.1
+  file_picker: ^10.3.10
+  shared_preferences: ^2.5.4
+  permission_handler: ^12.0.1
+  fl_chart: ^0.70.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/audio/
+    - assets/audio/notifications/
+    - assets/images/
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/logo.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/logo.png"

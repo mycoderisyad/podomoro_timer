@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../models/music_track.dart';
+import '../utils/localized_music_track_text.dart';
 
 class MusicCard extends StatelessWidget {
   final MusicTrack track;
@@ -51,7 +52,7 @@ class MusicCard extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          track.description,
+          localizedMusicTrackDescription(context, track),
           style: const TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
