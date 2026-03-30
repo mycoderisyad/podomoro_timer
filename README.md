@@ -24,15 +24,14 @@ flutter pub get
 flutter run
 ```
 
-<img width="691" height="1536" alt="image" src="https://github.com/user-attachments/assets/2aecec26-f896-4eb5-ba8c-107ed2d287b8" />
-
+## Android Release
 
 This project includes a GitHub Actions workflow that:
 
 - runs only when the `version:` value in `pubspec.yaml` changes
 - runs only for pushes to `main`
-- builds a signed `apk --release`
-- publishes the APK to GitHub Releases
+- builds signed split `apk --release` files
+- publishes the APKs to GitHub Releases
 
 Release tag format:
 
@@ -45,6 +44,7 @@ Required GitHub Secrets:
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Output file:
+Output files:
 
-- `podomoro-<version>-android-release.apk`
+- `podomoro-<version>-android-arm64-v8a-release.apk`
+- `podomoro-<version>-android-armeabi-v7a-release.apk`
