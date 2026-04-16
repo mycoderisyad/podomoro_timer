@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - docs/index.html
       - docs/privacy-policy.html
       - .github/workflows/privacy-policy-pages.yml
   workflow_dispatch:
@@ -36,6 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
+          cp docs/index.html _site/index.html
           cp docs/privacy-policy.html _site/privacy-policy.html
 
       - name: Upload Pages artifact
