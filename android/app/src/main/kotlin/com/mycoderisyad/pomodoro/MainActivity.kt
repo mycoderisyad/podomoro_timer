@@ -86,6 +86,6 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
-        private const val CHANNEL_NAME = "podomoro_timer/device_audio"
+        private const val CHANNEL_NAME = "pomodoro_timer/device_audio"
     }
 }
