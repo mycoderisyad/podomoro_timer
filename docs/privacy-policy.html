@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Pomodoro Timer</title>
+  <style>
+    :root {
+      --page-bg: #f6f2ea;
+      --paper-bg: #fffdf9;
+      --text: #1f1b16;
+      --muted: #6a6257;
+      --line: #ddd2c1;
+      --heading: #17120d;
+      --accent: #8e4b1f;
+      --button-bg: #f3e8d8;
+      --button-active: #8e4b1f;
+      --button-active-text: #fff9f2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.7;
+    }
+
+    main {
+      width: min(920px, calc(100vw - 32px));
+      margin: 32px auto;
+      padding: 48px 56px;
+      background: var(--paper-bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(44, 29, 12, 0.06);
+    }
+
+    h1,
+    h2 {
+      color: var(--heading);
+      line-height: 1.25;
+      margin: 0 0 16px;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 3vw, 2.6rem);
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 36px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    p,
+    li {
+      margin: 0 0 14px;
+      font-size: 1.04rem;
+    }
+
+    ul {
+      margin: 0 0 18px 22px;
+      padding: 0;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .meta,
+    .note {
+      color: var(--muted);
+    }
+
+    .lead {
+      font-size: 1.08rem;
+    }
+
+    .card {
+      margin-top: 22px;
+      padding: 18px 20px;
+      background: #fbf6ef;
+      border: 1px solid #eadfce;
+      border-radius: 10px;
+    }
+
+    .language-switcher {
+      display: inline-flex;
+      gap: 8px;
+      margin: 22px 0 10px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fcf7f0;
+    }
+
+    .language-switcher button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: var(--button-bg);
+      color: var(--heading);
+      font: inherit;
+      font-size: 0.96rem;
+      cursor: pointer;
+    }
+
+    .language-switcher button.active {
+      background: var(--button-active);
+      color: var(--button-active-text);
+    }
+
+    .lang-panel {
+      display: none;
+    }
+
+    .lang-panel.active {
+      display: block;
+    }
+
+    strong {
+      color: var(--heading);
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100vw - 20px, 920px);
+        margin: 10px auto;
+        padding: 28px 20px;
+        border-radius: 10px;
+      }
+
+      h2 {
+        margin-top: 28px;
+      }
+
+      .language-switcher {
+        width: 100%;
+      }
+
+      .language-switcher button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Privacy Policy</p>
+    <h1>Pomodoro Timer</h1>
+    <p class="meta">Last updated / Terakhir diperbarui: April 16, 2026</p>
+
+    <div class="language-switcher" aria-label="Language switcher">
+      <button id="button-en" class="active" type="button" data-lang="en">English</button>
+      <button id="button-id" type="button" data-lang="id">Bahasa Indonesia</button>
+    </div>
+
+    <section id="panel-en" class="lang-panel active" lang="en">
+      <p class="lead">
+        This Privacy Policy explains how <strong>Pomodoro Timer</strong> handles user data.
+        Based on the current implementation of the app, the app is designed to operate
+        primarily locally on the user's device.
+      </p>
+
+      <h2>1. Summary</h2>
+      <p>
+        Pomodoro Timer is a focus timer app that provides session settings, usage
+        statistics, notification sound playback, and an option to read audio already
+        available on an Android device if the user grants permission.
+      </p>
+      <div class="card">
+        <p><strong>In short:</strong> the app does not require a user account, does not operate its own backend server, does not use ads, and does not send personal user data to the developer's server based on the current codebase.</p>
+      </div>
+
+      <h2>2. Data Processed</h2>
+      <p>The app may process the following data locally on the device:</p>
+      <ul>
+        <li>App settings, such as focus duration, break duration, language, volume, and notification sound preferences.</li>
+        <li>Timer usage statistics, such as focus duration, break duration, completed sessions, and record dates.</li>
+        <li>Android device audio metadata, if permission is granted, such as song title, display name, artist, album, duration, and file reference or content URI.</li>
+      </ul>
+
+      <h2>3. How the Data Is Used</h2>
+      <p>The data is used only for app functionality, including:</p>
+      <ul>
+        <li>Saving user preferences so the app keeps the user's chosen settings.</li>
+        <li>Displaying timer usage statistics inside the app.</li>
+        <li>Reading local device audio so it can be selected or played on the user's Android device.</li>
+        <li>Playing built-in notification sounds.</li>
+      </ul>
+
+      <h2>4. Data Storage</h2>
+      <p>
+        Based on the current codebase, settings and statistics are stored locally on the
+        user's device using local app storage. This data is not transmitted to the
+        developer's server.
+      </p>
+      <p>
+        The app also does not require account registration and does not provide cloud
+        synchronization in the current implementation.
+      </p>
+
+      <h2>5. Device Permissions</h2>
+      <p>The app may request the following permissions on Android:</p>
+      <ul>
+        <li><strong>READ_MEDIA_AUDIO</strong> on Android 13 and above to read audio already stored on the device.</li>
+        <li><strong>READ_EXTERNAL_STORAGE</strong> on Android 12 and below for the same purpose.</li>
+      </ul>
+      <p>
+        These permissions are functional and used only when the user wants to grant access
+        to device audio. If the permission is not granted, the device audio feature may not
+        work, but the core timer feature can still be used.
+      </p>
+
+      <h2>6. Data Sharing with Third Parties</h2>
+      <p>
+        Based on the current codebase, the app does not sell user data and does not share
+        personal user data with the developer's server or advertising networks.
+      </p>
+      <p>
+        The app uses some third-party libraries for local app functions, such as preference
+        storage and audio playback. However, in the current implementation there is no
+        analytics, advertising, user authentication, or external backend data transmission.
+      </p>
+
+      <h2>7. Data Retention and Deletion</h2>
+      <p>
+        Settings and statistics remain on the user's device until the user clears app data,
+        uninstalls the app, or uses the in-app statistics clearing feature if available.
+      </p>
+
+      <h2>8. Children</h2>
+      <p>
+        The app is not specifically directed to children and is not known to intentionally
+        collect children's personal data based on the current implementation.
+      </p>
+
+      <h2>9. Changes to This Privacy Policy</h2>
+      <p>
+        This Privacy Policy may be updated from time to time to reflect feature changes,
+        regulatory changes, or changes in how the app processes data. The latest version
+        will be published on this page.
+      </p>
+
+      <h2>10. Contact</h2>
+      <p>
+        If you have any questions about this Privacy Policy, please contact the developer
+        using the contact email listed on the app's Google Play listing.
+      </p>
+
+      <h2>11. Technical Analysis Note</h2>
+      <p class="note">
+        This document was prepared based on analysis of the current project code, including
+        local storage usage for settings and statistics, and Android audio read permission.
+        If the app later adds analytics, login, cloud sync, ads, or data transmission to
+        external servers, this policy should be updated.
+      </p>
+    </section>
+
+    <section id="panel-id" class="lang-panel" lang="id">
+      <p class="lead">
+        Kebijakan Privasi ini menjelaskan bagaimana aplikasi <strong>Pomodoro Timer</strong>
+        menangani data pengguna. Berdasarkan implementasi aplikasi saat ini, aplikasi ini
+        dirancang untuk bekerja terutama secara lokal di perangkat pengguna.
+      </p>
+
+      <h2>1. Ringkasan</h2>
+      <p>
+        Pomodoro Timer adalah aplikasi timer fokus yang menyediakan pengaturan sesi,
+        statistik penggunaan, pemutaran audio notifikasi, serta opsi untuk membaca daftar
+        audio yang sudah tersedia di perangkat Android pengguna jika izin diberikan.
+      </p>
+      <div class="card">
+        <p><strong>Intinya:</strong> aplikasi ini tidak memiliki akun pengguna, tidak memiliki server backend sendiri, tidak menggunakan iklan, dan tidak mengirim data pribadi pengguna ke server pengembang berdasarkan kode proyek saat ini.</p>
+      </div>
+
+      <h2>2. Data yang Diproses</h2>
+      <p>Aplikasi dapat memproses data berikut secara lokal di perangkat:</p>
+      <ul>
+        <li>Pengaturan aplikasi, seperti durasi fokus, durasi istirahat, bahasa, volume, dan preferensi suara notifikasi.</li>
+        <li>Statistik penggunaan timer, seperti durasi fokus, durasi istirahat, jumlah sesi yang selesai, dan tanggal pencatatan statistik.</li>
+        <li>Metadata audio perangkat di Android jika pengguna memberi izin, seperti judul lagu, nama file tampilan, artis, album, durasi, dan referensi file atau content URI.</li>
+      </ul>
+
+      <h2>3. Cara Data Digunakan</h2>
+      <p>Data tersebut digunakan hanya untuk fungsi aplikasi, yaitu:</p>
+      <ul>
+        <li>Menyimpan preferensi pengguna agar aplikasi tetap sesuai pengaturan terakhir.</li>
+        <li>Menampilkan statistik penggunaan timer di dalam aplikasi.</li>
+        <li>Membaca audio lokal pengguna agar dapat dipilih atau diputar dari perangkat Android pengguna.</li>
+        <li>Memutar suara notifikasi bawaan aplikasi.</li>
+      </ul>
+
+      <h2>4. Penyimpanan Data</h2>
+      <p>
+        Berdasarkan kode proyek saat ini, pengaturan dan statistik disimpan secara lokal di
+        perangkat menggunakan penyimpanan lokal aplikasi. Data tersebut tidak dikirim ke
+        server pengembang.
+      </p>
+      <p>
+        Aplikasi juga tidak mewajibkan pengguna membuat akun dan tidak menyediakan fitur
+        sinkronisasi cloud pada implementasi saat ini.
+      </p>
+
+      <h2>5. Izin Perangkat</h2>
+      <p>Aplikasi dapat meminta izin berikut pada Android:</p>
+      <ul>
+        <li><strong>READ_MEDIA_AUDIO</strong> pada Android 13 ke atas untuk membaca daftar audio yang sudah ada di perangkat.</li>
+        <li><strong>READ_EXTERNAL_STORAGE</strong> pada Android 12 ke bawah untuk tujuan yang sama.</li>
+      </ul>
+      <p>
+        Izin tersebut bersifat fungsional dan digunakan hanya saat pengguna ingin memberi
+        akses ke audio perangkat. Jika izin tidak diberikan, bagian fitur audio perangkat
+        mungkin tidak dapat digunakan, tetapi fungsi timer dasar tetap dapat berjalan.
+      </p>
+
+      <h2>6. Pembagian Data kepada Pihak Ketiga</h2>
+      <p>
+        Berdasarkan kode proyek saat ini, aplikasi ini tidak menjual data pengguna dan tidak
+        membagikan data pribadi pengguna ke server pengembang atau jaringan iklan.
+      </p>
+      <p>
+        Aplikasi menggunakan beberapa pustaka pihak ketiga untuk fungsi lokal aplikasi,
+        seperti penyimpanan preferensi dan pemutaran audio. Namun, dari kode aplikasi saat ini,
+        tidak ada integrasi analytics, iklan, autentikasi pengguna, atau pengiriman data ke
+        layanan backend pihak ketiga.
+      </p>
+
+      <h2>7. Retensi dan Penghapusan Data</h2>
+      <p>
+        Data pengaturan dan statistik tetap berada di perangkat pengguna sampai pengguna
+        menghapus data aplikasi, menghapus instalasi aplikasi, atau menggunakan fitur hapus
+        statistik bila tersedia di dalam aplikasi.
+      </p>
+
+      <h2>8. Anak-Anak</h2>
+      <p>
+        Aplikasi ini tidak secara khusus menargetkan anak-anak dan tidak diketahui
+        mengumpulkan data pribadi anak-anak secara sengaja berdasarkan implementasi saat ini.
+      </p>
+
+      <h2>9. Perubahan Kebijakan Privasi</h2>
+      <p>
+        Kebijakan Privasi ini dapat diperbarui dari waktu ke waktu untuk mencerminkan
+        perubahan fitur, perubahan regulasi, atau perubahan cara aplikasi memproses data.
+        Versi terbaru akan dipublikasikan pada halaman ini.
+      </p>
+
+      <h2>10. Kontak</h2>
+      <p>
+        Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi
+        pengembang melalui alamat email kontak yang dicantumkan pada halaman listing
+        Google Play aplikasi ini.
+      </p>
+
+      <h2>11. Catatan Analisis Teknis</h2>
+      <p class="note">
+        Dokumen ini disusun berdasarkan analisis kode proyek saat ini, termasuk penggunaan
+        penyimpanan lokal untuk pengaturan dan statistik, serta izin baca audio perangkat
+        Android. Jika aplikasi di masa depan menambahkan analytics, login, sinkronisasi cloud,
+        iklan, atau transmisi data ke server eksternal, kebijakan ini perlu diperbarui.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const buttons = document.querySelectorAll("[data-lang]");
+    const panels = {
+      en: document.getElementById("panel-en"),
+      id: document.getElementById("panel-id"),
+    };
+
+    function setLanguage(lang) {
+      buttons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+      });
+
+      Object.entries(panels).forEach(([key, panel]) => {
+        panel.classList.toggle("active", key === lang);
+      });
+
+      document.documentElement.lang = lang;
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => setLanguage(button.dataset.lang));
+    });
+  </script>
+</body>
+</html>
