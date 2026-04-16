@@ -1,4 +1,4 @@
-package com.example.podomoro_timer
+package com.mycoderisyad.pomodoro
 
 import android.content.ContentUris
 import android.os.Build
