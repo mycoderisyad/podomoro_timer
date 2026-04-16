@@ -1,7 +1,7 @@
 name: pomodoro_timer
 description: "simple pomodoro timer"
 publish_to: "none"
-version: 2.2.5+2
+version: 2.2.6+3
 
 environment:
   sdk: ^3.10.7
