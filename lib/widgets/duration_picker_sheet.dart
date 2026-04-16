@@ -23,7 +23,8 @@ class DurationPickerSheet extends StatefulWidget {
 
 class _DurationPickerSheetState extends State<DurationPickerSheet> {
   bool _isCustomMode = false;
-  final TextEditingController _customMinutesController = TextEditingController();
+  final TextEditingController _customMinutesController =
+      TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -44,7 +45,7 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
   }
 
   void _applyCustomDuration() {
-    final l10n = context.l10n;
+    final l10n = context.timerL10n;
     final minutes = int.tryParse(_customMinutesController.text);
     if (minutes != null && minutes > 0 && minutes <= 180) {
       widget.onSelected(minutes * 60);
@@ -60,7 +61,7 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = context.timerL10n;
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -90,13 +91,15 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
                     setState(() {
                       _isCustomMode = !_isCustomMode;
                       if (_isCustomMode) {
-                        _customMinutesController.text = 
+                        _customMinutesController.text =
                             (widget.currentValue ~/ 60).toString();
                       }
                     });
                   },
                   icon: Icon(
-                    _isCustomMode ? Icons.grid_view_rounded : Icons.edit_rounded,
+                    _isCustomMode
+                        ? Icons.grid_view_rounded
+                        : Icons.edit_rounded,
                     size: 18,
                   ),
                   label: Text(_isCustomMode ? l10n.preset : l10n.custom),
@@ -196,7 +199,9 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
                         color: isSelected ? AppColors.primary : AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.secondary,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.secondary,
                           width: 2,
                         ),
                       ),
@@ -205,7 +210,9 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? AppColors.white : AppColors.textPrimary,
+                          color: isSelected
+                              ? AppColors.white
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -220,4 +227,3 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
     );
   }
 }
-

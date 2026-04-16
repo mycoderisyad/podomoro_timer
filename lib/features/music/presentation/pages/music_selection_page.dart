@@ -1,0 +1,186 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/l10n.dart';
+import '../../application/music_library_controller.dart';
+import '../../data/audio_library_repository.dart';
+import '../../domain/music_track.dart';
+import '../widgets/music_library_content.dart';
+import '../widgets/music_library_toolbar.dart';
+import '../widgets/music_queue_preview.dart';
+
+class MusicSelectionPage extends StatefulWidget {
+  final List<MusicTrack>? currentQueue;
+
+  const MusicSelectionPage({super.key, this.currentQueue});
+
+  @override
+  State<MusicSelectionPage> createState() => _MusicSelectionPageState();
+}
+
+class _MusicSelectionPageState extends State<MusicSelectionPage> {
+  late final MusicLibraryController _controller;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MusicLibraryController(
+      repository: const MethodChannelAudioLibraryRepository(),
+    );
+    _controller.initialize(widget.currentQueue ?? const []);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _confirmSelection() {
+    Navigator.pop(context, List<MusicTrack>.from(_controller.selectedQueue));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.musicL10n;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final hasSelection = _controller.selectedQueue.isNotEmpty;
+
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (!didPop) {
+              Navigator.of(context).pop(_controller.selectedQueue);
+            }
+          },
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.textPrimary,
+                onPressed: () =>
+                    Navigator.pop(context, _controller.selectedQueue),
+              ),
+              title: Text(
+                l10n.musicLibrary,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: _controller.isLoading
+                      ? null
+                      : () => _controller.loadTracks(requestPermission: true),
+                  icon: const Icon(Icons.refresh_rounded),
+                  color: AppColors.primary,
+                  iconSize: 28,
+                  tooltip: l10n.refreshLibrary,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: hasSelection
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: FloatingActionButton.extended(
+                      onPressed: _confirmSelection,
+                      backgroundColor: AppColors.textPrimary,
+                      elevation: 4,
+                      highlightElevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      icon: const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.surfaceLight,
+                      ),
+                      label: Text(
+                        l10n.useTracks(_controller.selectedQueue.length),
+                        style: const TextStyle(
+                          color: AppColors.surfaceLight,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
+            body: _buildBody(context, hasSelection),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(BuildContext context, bool hasSelection) {
+    if (_controller.isLoading && _controller.tracks.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final hasLibraryTracks = _controller.tracks.isNotEmpty;
+
+    return Column(
+      children: [
+        // Keep the current selection visible while browsing device tracks.
+        MusicQueuePreview(
+          selectedQueue: _controller.selectedQueue,
+          onClearAll: _controller.clearQueue,
+          onRemoveTrack: _controller.removeFromQueue,
+        ),
+        if (hasLibraryTracks)
+          MusicLibraryToolbar(
+            searchController: _searchController,
+            searchQuery: _controller.searchQuery,
+            selectedFileType: _controller.selectedFileType,
+            availableFileTypes: _controller.availableFileTypes,
+            filteredTrackCount: _controller.filteredTracks.length,
+            currentPage: _controller.currentPage,
+            totalPages: _controller.totalPages,
+            canToggleSelectAll: _controller.hasVisibleTracks,
+            areAllVisibleTracksSelected:
+                _controller.areAllVisibleTracksSelected,
+            onSearchChanged: _controller.setSearchQuery,
+            onClearSearch: _clearSearch,
+            onFileTypeChanged: _controller.setSelectedFileType,
+            onToggleSelectAll: _controller.toggleSelectAllVisibleTracks,
+          ),
+        Expanded(
+          child: MusicLibraryContent(
+            controller: _controller,
+            hasSelection: hasSelection,
+            onRetryPermission: () =>
+                _controller.loadTracks(requestPermission: true),
+            onRefreshLibrary: () =>
+                _controller.loadTracks(requestPermission: false),
+            onClearFilters: _clearFilters,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _controller.setSearchQuery('');
+  }
+
+  void _clearFilters() {
+    _clearSearch();
+    _controller.setSelectedFileType(null);
+  }
+}

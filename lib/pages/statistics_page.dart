@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../core/theme/app_colors.dart';
-import '../l10n/app_localizations.dart';
+import '../l10n/features/statistics_l10n.dart';
 import '../l10n/l10n.dart';
 import '../models/statistic_record.dart';
 import '../services/statistics_service.dart';
@@ -77,7 +77,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Future<void> _showClearConfirmation() async {
-    final l10n = context.l10n;
+    final l10n = context.statisticsL10n;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -106,7 +106,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = context.statisticsL10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -155,7 +155,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  Widget _buildPeriodSelector(AppLocalizations l10n) {
+  Widget _buildPeriodSelector(StatisticsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -181,7 +181,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? AppColors.white : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.white
+                        : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -192,7 +194,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  String _periodLabel(AppLocalizations l10n, StatsPeriod period) {
+  String _periodLabel(StatisticsL10n l10n, StatsPeriod period) {
     switch (period) {
       case StatsPeriod.daily:
         return l10n.today;
@@ -205,7 +207,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
-  Widget _buildSummaryCards(AppLocalizations l10n) {
+  Widget _buildSummaryCards(StatisticsL10n l10n) {
     return Row(
       children: [
         Expanded(
@@ -272,7 +274,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  Widget _buildChartSection(AppLocalizations l10n) {
+  Widget _buildChartSection(StatisticsL10n l10n) {
     final chartData = _buildChartData(l10n.localeName);
 
     return Container(
@@ -373,10 +375,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         show: true,
                         drawVerticalLine: false,
                         horizontalInterval: _chartInterval(chartData),
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: AppColors.surface,
-                          strokeWidth: 1,
-                        ),
+                        getDrawingHorizontalLine: (value) =>
+                            FlLine(color: AppColors.surface, strokeWidth: 1),
                       ),
                       borderData: FlBorderData(show: false),
                       barGroups: chartData.asMap().entries.map((entry) {
@@ -438,7 +438,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
     switch (_selectedPeriod) {
       case StatsPeriod.daily:
-        return _buildDailyData(records, now, localeName);
+        return _buildDailyData(records, now);
       case StatsPeriod.weekly:
         return _buildWeeklyData(records, now, localeName);
       case StatsPeriod.monthly:
@@ -451,7 +451,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
   List<Map<String, dynamic>> _buildDailyData(
     List<StatisticRecord> records,
     DateTime now,
-    String localeName,
   ) {
     final today = DateTime(now.year, now.month, now.day);
     final todayRecord = records.where(
@@ -464,7 +463,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
     if (todayRecord.isEmpty) return [];
 
     return [
-      {'label': context.l10n.today, 'value': todayRecord.first.focusMinutes},
+      {
+        'label': context.statisticsL10n.today,
+        'value': todayRecord.first.focusMinutes,
+      },
     ];
   }
 

@@ -4,6 +4,7 @@ class AppSettings {
   int focusDuration;
   int breakDuration;
   bool autoStartBreak;
+  int modeTransitionDelaySeconds;
   bool syncMusicWithTimer;
   double defaultVolume;
 
@@ -18,6 +19,8 @@ class AppSettings {
     this.focusDuration = AppConstants.defaultFocusDuration,
     this.breakDuration = AppConstants.defaultBreakDuration,
     this.autoStartBreak = false,
+    this.modeTransitionDelaySeconds =
+        AppConstants.defaultModeTransitionDelaySeconds,
     this.syncMusicWithTimer = true,
     this.defaultVolume = AppConstants.defaultVolume,
     this.soundEnabled = true,
@@ -31,6 +34,7 @@ class AppSettings {
     int? focusDuration,
     int? breakDuration,
     bool? autoStartBreak,
+    int? modeTransitionDelaySeconds,
     bool? syncMusicWithTimer,
     double? defaultVolume,
     bool? soundEnabled,
@@ -43,6 +47,8 @@ class AppSettings {
       focusDuration: focusDuration ?? this.focusDuration,
       breakDuration: breakDuration ?? this.breakDuration,
       autoStartBreak: autoStartBreak ?? this.autoStartBreak,
+      modeTransitionDelaySeconds:
+          modeTransitionDelaySeconds ?? this.modeTransitionDelaySeconds,
       syncMusicWithTimer: syncMusicWithTimer ?? this.syncMusicWithTimer,
       defaultVolume: defaultVolume ?? this.defaultVolume,
       soundEnabled: soundEnabled ?? this.soundEnabled,

@@ -21,9 +21,10 @@ class TimerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final targetMode =
-        currentMode == TimerMode.focus ? l10n.breakLabel : l10n.focus;
+    final l10n = context.timerL10n;
+    final targetMode = currentMode == TimerMode.focus
+        ? l10n.breakLabel
+        : l10n.focus;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -32,7 +33,9 @@ class TimerControls extends StatelessWidget {
           children: [
             Expanded(
               child: ActionButton(
-                icon: isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                icon: isRunning
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
                 label: isRunning ? l10n.pause : l10n.start,
                 onPressed: onStartPause,
                 isPrimary: true,

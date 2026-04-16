@@ -6,6 +6,8 @@ class SettingsService {
   static const String _keyFocusDuration = 'setting_focus_duration';
   static const String _keyBreakDuration = 'setting_break_duration';
   static const String _keyAutoStartBreak = 'setting_auto_start_break';
+  static const String _keyModeTransitionDelaySeconds =
+      'setting_mode_transition_delay_seconds';
   static const String _keySyncMusicWithTimer = 'setting_sync_music';
   static const String _keyDefaultVolume = 'setting_default_volume';
   static const String _keySoundEnabled = 'setting_sound_enabled';
@@ -13,8 +15,7 @@ class SettingsService {
   static const String _keyNotificationVolume = 'setting_notification_volume';
   static const String _keyAutoClearSchedule = 'setting_auto_clear_schedule';
   static const String _keyLanguageCode = 'setting_language_code';
-  static const String _legacyFocusLockEnabledKey =
-      'setting_focus_lock_enabled';
+  static const String _legacyFocusLockEnabledKey = 'setting_focus_lock_enabled';
 
   static String _normalizeNotificationSoundPath(String? path) {
     switch (path) {
@@ -58,6 +59,9 @@ class SettingsService {
       breakDuration:
           prefs.getInt(_keyBreakDuration) ?? AppConstants.defaultBreakDuration,
       autoStartBreak: prefs.getBool(_keyAutoStartBreak) ?? false,
+      modeTransitionDelaySeconds:
+          prefs.getInt(_keyModeTransitionDelaySeconds) ??
+          AppConstants.defaultModeTransitionDelaySeconds,
       syncMusicWithTimer: prefs.getBool(_keySyncMusicWithTimer) ?? true,
       defaultVolume:
           prefs.getDouble(_keyDefaultVolume) ?? AppConstants.defaultVolume,
@@ -75,6 +79,10 @@ class SettingsService {
     await prefs.setInt(_keyFocusDuration, settings.focusDuration);
     await prefs.setInt(_keyBreakDuration, settings.breakDuration);
     await prefs.setBool(_keyAutoStartBreak, settings.autoStartBreak);
+    await prefs.setInt(
+      _keyModeTransitionDelaySeconds,
+      settings.modeTransitionDelaySeconds,
+    );
     await prefs.setBool(_keySyncMusicWithTimer, settings.syncMusicWithTimer);
     await prefs.setDouble(_keyDefaultVolume, settings.defaultVolume);
     await prefs.setBool(_keySoundEnabled, settings.soundEnabled);

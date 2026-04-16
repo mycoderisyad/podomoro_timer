@@ -1,0 +1,17 @@
+const Map<String, String> timerEn = {
+  'headingToMode': 'Heading to {mode}',
+  'focusSessionCompleteMessage': 'Focus session complete! Time for a break.',
+  'breakEndedMessage': 'Your break is over. Time to focus again!',
+  'focusDuration': 'Focus Duration',
+  'breakDuration': 'Break Duration',
+  'invalidDurationMessage': 'Please enter a valid duration (1-180 minutes)',
+  'preset': 'Preset',
+  'custom': 'Custom',
+  'minutes': 'Minutes',
+  'enterMinutes': 'Enter minutes',
+  'apply': 'Apply',
+  'durationHint': 'Enter any duration from 1 to 180 minutes',
+  'start': 'Start',
+  'pause': 'Pause',
+  'reset': 'Reset',
+};

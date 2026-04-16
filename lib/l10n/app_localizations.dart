@@ -3,15 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'locales/localized_values.dart';
+
 class AppLocalizations {
   AppLocalizations(this.locale);
 
   final Locale locale;
 
-  static const supportedLocales = [
-    Locale('en'),
-    Locale('id'),
-  ];
+  static const supportedLocales = [Locale('en'), Locale('id')];
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
@@ -25,201 +24,8 @@ class AppLocalizations {
     return localizations!;
   }
 
-  static const Map<String, Map<String, String>> _localizedValues = {
-    'en': {
-      'appTitle': 'Pomodoro Timer',
-      'settings': 'Settings',
-      'saveSettingsTooltip': 'Save settings',
-      'behavior': 'Behavior',
-      'autoStartBreakTitle': 'Auto-Start Break',
-      'autoStartBreakSubtitle':
-          'Automatically start break after a focus session',
-      'syncMusicWithTimerTitle': 'Sync Music with Timer',
-      'syncMusicWithTimerSubtitle':
-          'Automatically play and pause music with the timer',
-      'language': 'Language',
-      'languageSubtitle': 'Choose the app language',
-      'languageEnglish': 'English',
-      'languageIndonesian': 'Indonesian',
-      'notifications': 'Notifications',
-      'soundNotificationsTitle': 'Sound Notifications',
-      'soundNotificationsSubtitle': 'Play a sound when a session ends',
-      'notificationSound': 'Notification Sound',
-      'notificationVolume': 'Notification Volume',
-      'testSoundTooltip': 'Test sound',
-      'notificationPlaybackFailed': 'Unable to play notification sound',
-      'audio': 'Audio',
-      'defaultMusicVolume': 'Default Music Volume',
-      'data': 'Data',
-      'autoClearStatistics': 'Auto-Clear Statistics',
-      'autoClearStatisticsSubtitle':
-          'Automatically clear statistics based on a schedule',
-      'autoClearNever': 'Never',
-      'autoClear7Days': 'Every 7 days',
-      'autoClear30Days': 'Every 30 days',
-      'autoClear3Months': 'Every 3 months',
-      'autoClear1Year': 'Every year',
-      'unsavedChangesTitle': 'Unsaved Changes',
-      'unsavedChangesMessage':
-          'You have unsaved changes. What would you like to do?',
-      'cancel': 'Cancel',
-      'discardChanges': 'Discard Changes',
-      'save': 'Save',
-      'bell': 'Bell',
-      'chime': 'Chime',
-      'ding': 'Ding',
-      'statistics': 'Statistics',
-      'deleteAllStatisticsTooltip': 'Delete all data',
-      'deleteAllDataTitle': 'Delete All Data',
-      'deleteAllDataMessage':
-          'Are you sure you want to delete all statistics? This action cannot be undone.',
-      'delete': 'Delete',
-      'today': 'Today',
-      'week': 'Week',
-      'month': 'Month',
-      'year': 'Year',
-      'sessions': 'Sessions',
-      'focus': 'Focus',
-      'break': 'Break',
-      'average': 'Average',
-      'focusMinutesChartTitle': 'Focus (minutes)',
-      'noDataYet': 'No data yet',
-      'focusSessionCompleteMessage':
-          'Focus session complete! Time for a break.',
-      'breakEndedTitle': 'Break Finished',
-      'breakEndedMessage':
-          'Your break is over. Time to focus again!',
-      'ok': 'OK',
-      'focusDuration': 'Focus Duration',
-      'breakDuration': 'Break Duration',
-      'invalidDurationMessage':
-          'Please enter a valid duration (1-180 minutes)',
-      'preset': 'Preset',
-      'custom': 'Custom',
-      'minutes': 'Minutes',
-      'enterMinutes': 'Enter minutes',
-      'apply': 'Apply',
-      'durationHint': 'Enter any duration from 1 to 180 minutes',
-      'start': 'Start',
-      'pause': 'Pause',
-      'reset': 'Reset',
-      'statisticsTooltip': 'Statistics',
-      'settingsTooltip': 'Settings',
-      'noMusicSelected': 'No Music Selected',
-      'tapToSelectMusic': 'Tap to select music',
-      'musicQueue': 'Music Queue',
-      'playing': 'Playing',
-      'playingOrder': 'Playing Order',
-      'clearAll': 'Clear All',
-      'removeFromQueueTooltip': 'Remove from queue',
-      'emptyLibraryTitle': 'Your library is empty',
-      'importMusicFiles': 'Import Music Files',
-      'musicLibrary': 'Music Library',
-      'addCustomMusicTooltip': 'Add custom music',
-      'storagePermissionRequired':
-          'Storage permission is required to add music',
-      'musicAlreadyInLibrary': 'Music is already in your library',
-      'deleteMusicTitle': 'Delete Music',
-      'customMusic': 'Custom music',
-    },
-    'id': {
-      'appTitle': 'Pomodoro Timer',
-      'settings': 'Pengaturan',
-      'saveSettingsTooltip': 'Simpan pengaturan',
-      'behavior': 'Perilaku',
-      'autoStartBreakTitle': 'Mulai Istirahat Otomatis',
-      'autoStartBreakSubtitle':
-          'Mulai waktu istirahat otomatis setelah sesi fokus selesai',
-      'syncMusicWithTimerTitle': 'Sinkronkan Musik dengan Timer',
-      'syncMusicWithTimerSubtitle':
-          'Putar dan jeda musik otomatis mengikuti timer',
-      'language': 'Bahasa',
-      'languageSubtitle': 'Pilih bahasa aplikasi',
-      'languageEnglish': 'Inggris',
-      'languageIndonesian': 'Indonesia',
-      'notifications': 'Notifikasi',
-      'soundNotificationsTitle': 'Notifikasi Suara',
-      'soundNotificationsSubtitle':
-          'Putar suara saat sesi selesai',
-      'notificationSound': 'Suara Notifikasi',
-      'notificationVolume': 'Volume Notifikasi',
-      'testSoundTooltip': 'Coba suara',
-      'notificationPlaybackFailed': 'Gagal memutar suara notifikasi',
-      'audio': 'Audio',
-      'defaultMusicVolume': 'Volume Musik Default',
-      'data': 'Data',
-      'autoClearStatistics': 'Hapus Statistik Otomatis',
-      'autoClearStatisticsSubtitle':
-          'Hapus statistik otomatis berdasarkan jadwal',
-      'autoClearNever': 'Tidak pernah',
-      'autoClear7Days': 'Setiap 7 hari',
-      'autoClear30Days': 'Setiap 30 hari',
-      'autoClear3Months': 'Setiap 3 bulan',
-      'autoClear1Year': 'Setiap tahun',
-      'unsavedChangesTitle': 'Perubahan Belum Disimpan',
-      'unsavedChangesMessage':
-          'Ada perubahan yang belum disimpan. Apa yang ingin Anda lakukan?',
-      'cancel': 'Batal',
-      'discardChanges': 'Buang Perubahan',
-      'save': 'Simpan',
-      'bell': 'Lonceng',
-      'chime': 'Genta',
-      'ding': 'Ding',
-      'statistics': 'Statistik',
-      'deleteAllStatisticsTooltip': 'Hapus semua data',
-      'deleteAllDataTitle': 'Hapus Semua Data',
-      'deleteAllDataMessage':
-          'Yakin ingin menghapus semua statistik? Tindakan ini tidak dapat dibatalkan.',
-      'delete': 'Hapus',
-      'today': 'Hari Ini',
-      'week': 'Minggu',
-      'month': 'Bulan',
-      'year': 'Tahun',
-      'sessions': 'Sesi',
-      'focus': 'Fokus',
-      'break': 'Istirahat',
-      'average': 'Rata-rata',
-      'focusMinutesChartTitle': 'Fokus (menit)',
-      'noDataYet': 'Belum ada data',
-      'focusSessionCompleteMessage':
-          'Sesi fokus selesai! Saatnya istirahat.',
-      'breakEndedTitle': 'Istirahat Selesai',
-      'breakEndedMessage':
-          'Waktu istirahat selesai. Saatnya fokus lagi!',
-      'ok': 'OK',
-      'focusDuration': 'Durasi Fokus',
-      'breakDuration': 'Durasi Istirahat',
-      'invalidDurationMessage':
-          'Masukkan durasi yang valid (1-180 menit)',
-      'preset': 'Preset',
-      'custom': 'Kustom',
-      'minutes': 'Menit',
-      'enterMinutes': 'Masukkan menit',
-      'apply': 'Terapkan',
-      'durationHint': 'Masukkan durasi antara 1 sampai 180 menit',
-      'start': 'Mulai',
-      'pause': 'Jeda',
-      'reset': 'Reset',
-      'statisticsTooltip': 'Statistik',
-      'settingsTooltip': 'Pengaturan',
-      'noMusicSelected': 'Belum Ada Musik',
-      'tapToSelectMusic': 'Ketuk untuk memilih musik',
-      'musicQueue': 'Antrean Musik',
-      'playing': 'Diputar',
-      'playingOrder': 'Urutan Putar',
-      'clearAll': 'Hapus Semua',
-      'removeFromQueueTooltip': 'Hapus dari antrean',
-      'emptyLibraryTitle': 'Pustaka musik Anda kosong',
-      'importMusicFiles': 'Impor File Musik',
-      'musicLibrary': 'Pustaka Musik',
-      'addCustomMusicTooltip': 'Tambah musik kustom',
-      'storagePermissionRequired':
-          'Izin penyimpanan diperlukan untuk menambahkan musik',
-      'musicAlreadyInLibrary': 'Musik sudah ada di pustaka Anda',
-      'deleteMusicTitle': 'Hapus Musik',
-      'customMusic': 'Musik kustom',
-    },
-  };
+  static const Map<String, Map<String, String>> _localizedValues =
+      localizedValues;
 
   String get _languageCode {
     final code = locale.languageCode;
@@ -234,12 +40,18 @@ class AppLocalizations {
         _localizedValues['en']![key]!;
   }
 
+  // Shared app and shell labels.
   String appTitle() => _text('appTitle');
+
+  // Settings screen labels.
   String get settings => _text('settings');
   String get saveSettingsTooltip => _text('saveSettingsTooltip');
   String get behavior => _text('behavior');
   String get autoStartBreakTitle => _text('autoStartBreakTitle');
   String get autoStartBreakSubtitle => _text('autoStartBreakSubtitle');
+  String get modeTransitionDelayTitle => _text('modeTransitionDelayTitle');
+  String get modeTransitionDelaySubtitle =>
+      _text('modeTransitionDelaySubtitle');
   String get syncMusicWithTimerTitle => _text('syncMusicWithTimerTitle');
   String get syncMusicWithTimerSubtitle => _text('syncMusicWithTimerSubtitle');
   String get language => _text('language');
@@ -255,12 +67,15 @@ class AppLocalizations {
   String get defaultMusicVolume => _text('defaultMusicVolume');
   String get data => _text('data');
   String get autoClearStatistics => _text('autoClearStatistics');
-  String get autoClearStatisticsSubtitle => _text('autoClearStatisticsSubtitle');
+  String get autoClearStatisticsSubtitle =>
+      _text('autoClearStatisticsSubtitle');
   String get unsavedChangesTitle => _text('unsavedChangesTitle');
   String get unsavedChangesMessage => _text('unsavedChangesMessage');
   String get cancel => _text('cancel');
   String get discardChanges => _text('discardChanges');
   String get save => _text('save');
+
+  // Statistics screen labels.
   String get statistics => _text('statistics');
   String get deleteAllStatisticsTooltip => _text('deleteAllStatisticsTooltip');
   String get deleteAllDataTitle => _text('deleteAllDataTitle');
@@ -276,10 +91,11 @@ class AppLocalizations {
   String get average => _text('average');
   String get focusMinutesChartTitle => _text('focusMinutesChartTitle');
   String get noDataYet => _text('noDataYet');
-  String get focusSessionCompleteMessage => _text('focusSessionCompleteMessage');
-  String get breakEndedTitle => _text('breakEndedTitle');
+
+  // Timer and duration labels.
+  String get focusSessionCompleteMessage =>
+      _text('focusSessionCompleteMessage');
   String get breakEndedMessage => _text('breakEndedMessage');
-  String get ok => _text('ok');
   String get focusDuration => _text('focusDuration');
   String get breakDuration => _text('breakDuration');
   String get invalidDurationMessage => _text('invalidDurationMessage');
@@ -294,24 +110,50 @@ class AppLocalizations {
   String get reset => _text('reset');
   String get statisticsTooltip => _text('statisticsTooltip');
   String get settingsTooltip => _text('settingsTooltip');
+
+  // Music library and playback labels.
   String get noMusicSelected => _text('noMusicSelected');
   String get tapToSelectMusic => _text('tapToSelectMusic');
   String get musicQueue => _text('musicQueue');
   String get playing => _text('playing');
   String get playingOrder => _text('playingOrder');
   String get clearAll => _text('clearAll');
+  String get selectAll => _text('selectAll');
+  String get unselectAll => _text('unselectAll');
+  String get audioTypeFilterLabel => _text('audioTypeFilterLabel');
+  String get allAudioTypes => _text('allAudioTypes');
+  String get previousPage => _text('previousPage');
+  String get nextPage => _text('nextPage');
   String get removeFromQueueTooltip => _text('removeFromQueueTooltip');
-  String get emptyLibraryTitle => _text('emptyLibraryTitle');
-  String get importMusicFiles => _text('importMusicFiles');
   String get musicLibrary => _text('musicLibrary');
-  String get addCustomMusicTooltip => _text('addCustomMusicTooltip');
-  String get storagePermissionRequired => _text('storagePermissionRequired');
-  String get musicAlreadyInLibrary => _text('musicAlreadyInLibrary');
-  String get deleteMusicTitle => _text('deleteMusicTitle');
   String get customMusic => _text('customMusic');
+  String get deviceMusic => _text('deviceMusic');
+  String get refreshLibrary => _text('refreshLibrary');
+  String get allowAudioAccess => _text('allowAudioAccess');
+  String get openSettings => _text('openSettings');
+  String get audioPermissionTitle => _text('audioPermissionTitle');
+  String get audioPermissionSubtitle => _text('audioPermissionSubtitle');
+  String get audioPermissionPermanentlyDeniedTitle =>
+      _text('audioPermissionPermanentlyDeniedTitle');
+  String get audioPermissionPermanentlyDeniedSubtitle =>
+      _text('audioPermissionPermanentlyDeniedSubtitle');
+  String get noDeviceMusicTitle => _text('noDeviceMusicTitle');
+  String get noDeviceMusicSubtitle => _text('noDeviceMusicSubtitle');
+  String get androidOnlyMusicLibraryTitle =>
+      _text('androidOnlyMusicLibraryTitle');
+  String get androidOnlyMusicLibrarySubtitle =>
+      _text('androidOnlyMusicLibrarySubtitle');
+  String get searchMusicHint => _text('searchMusicHint');
+  String get clearSearchTooltip => _text('clearSearchTooltip');
+  String get clearSearch => _text('clearSearch');
+  String get noSearchResultsTitle => _text('noSearchResultsTitle');
+  String get noSearchResultsSubtitle => _text('noSearchResultsSubtitle');
 
+  // Shared formatting helpers.
   String languageLabel(String code) {
-    return code == 'id' ? _text('languageIndonesian') : _text('languageEnglish');
+    return code == 'id'
+        ? _text('languageIndonesian')
+        : _text('languageEnglish');
   }
 
   String soundLabel(String id) {
@@ -352,8 +194,8 @@ class AppLocalizations {
 
   String queueSummary(int current, int total) {
     return isEnglish
-        ? 'Queue: $current/$total - Tap to view'
-        : 'Antrean: $current/$total - Ketuk untuk melihat';
+        ? 'Queue: $current/$total - Tap to edit'
+        : 'Antrean: $current/$total - Ketuk untuk ubah';
   }
 
   String trackCount(int count) {
@@ -370,6 +212,26 @@ class AppLocalizations {
     return '$count lagu dipilih';
   }
 
+  String filteredTrackCount(int count, int currentPage, int totalPages) {
+    if (isEnglish) {
+      return '$count results | Page $currentPage/$totalPages';
+    }
+    return '$count hasil | Halaman $currentPage/$totalPages';
+  }
+
+  String pageIndicator(int currentPage, int totalPages) {
+    return isEnglish
+        ? 'Page $currentPage of $totalPages'
+        : 'Halaman $currentPage dari $totalPages';
+  }
+
+  String audioTypeLabel(String extension) {
+    if (extension == 'unknown') {
+      return isEnglish ? 'Unknown' : 'Tidak diketahui';
+    }
+    return extension.toUpperCase();
+  }
+
   String useTracks(int count) {
     if (isEnglish) {
       return 'Use $count ${count == 1 ? 'Track' : 'Tracks'}';
@@ -377,31 +239,25 @@ class AppLocalizations {
     return 'Gunakan $count Lagu';
   }
 
-  String addedMusicFiles(int count) {
-    if (isEnglish) {
-      return 'Added $count ${count == 1 ? 'music file' : 'music files'}';
-    }
-    return 'Berhasil menambahkan $count file musik';
-  }
-
-  String errorAddingMusic(String error) {
-    return isEnglish
-        ? 'Error adding music: $error'
-        : 'Gagal menambahkan musik: $error';
-  }
-
-  String deleteMusicMessage(String title) {
-    return isEnglish
-        ? 'Are you sure you want to remove "$title" from your library?'
-        : 'Yakin ingin menghapus "$title" dari pustaka Anda?';
-  }
-
-  String removedTrack(String title) {
-    return isEnglish ? 'Removed: $title' : 'Dihapus: $title';
-  }
-
   String minutesValue(Object value) {
     return '$value ${isEnglish ? 'min' : 'menit'}';
+  }
+
+  String modeTransitionDelayValue(int seconds) {
+    if (seconds == 0) {
+      return isEnglish ? 'No delay' : 'Tanpa jeda';
+    }
+    return isEnglish ? '$seconds sec' : '$seconds dtk';
+  }
+
+  String transitionStatusLabel(String mode, int seconds) {
+    return isEnglish
+        ? 'Switching to $mode in $seconds s'
+        : 'Pindah ke $mode dalam $seconds dtk';
+  }
+
+  String headingToModeLabel(String mode) {
+    return _text('headingToMode').replaceFirst('{mode}', mode);
   }
 }
 
