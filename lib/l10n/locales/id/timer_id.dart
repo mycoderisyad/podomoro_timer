@@ -1,0 +1,17 @@
+const Map<String, String> timerId = {
+  'headingToMode': 'Menuju {mode}',
+  'focusSessionCompleteMessage': 'Sesi fokus selesai! Saatnya istirahat.',
+  'breakEndedMessage': 'Waktu istirahat selesai. Saatnya fokus lagi!',
+  'focusDuration': 'Durasi Fokus',
+  'breakDuration': 'Durasi Istirahat',
+  'invalidDurationMessage': 'Masukkan durasi yang valid (1-180 menit)',
+  'preset': 'Preset',
+  'custom': 'Kustom',
+  'minutes': 'Menit',
+  'enterMinutes': 'Masukkan menit',
+  'apply': 'Terapkan',
+  'durationHint': 'Masukkan durasi antara 1 sampai 180 menit',
+  'start': 'Mulai',
+  'pause': 'Jeda',
+  'reset': 'Reset',
+};

@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
 import 'pages/timer_page.dart';
 import 'models/app_settings.dart';
 import 'services/settings_service.dart';
@@ -41,7 +42,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle(),
+      onGenerateTitle: (context) => context.appL10n.appTitle(),
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       locale: Locale(_settings.languageCode),

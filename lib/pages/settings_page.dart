@@ -2,7 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
-import '../l10n/app_localizations.dart';
+import '../l10n/features/settings_l10n.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/notification_audio_service.dart';
@@ -18,6 +18,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late bool _autoStartBreak;
+  late int _modeTransitionDelaySeconds;
   late bool _syncMusicWithTimer;
   late double _defaultVolume;
   late bool _soundEnabled;
@@ -28,18 +29,9 @@ class _SettingsPageState extends State<SettingsPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   final List<Map<String, String>> _soundOptions = [
-    {
-      'id': 'bell',
-      'path': 'assets/audio/notifications/bell.ogg',
-    },
-    {
-      'id': 'chime',
-      'path': 'assets/audio/notifications/chime.ogg',
-    },
-    {
-      'id': 'ding',
-      'path': 'assets/audio/notifications/ding.ogg',
-    },
+    {'id': 'bell', 'path': 'assets/audio/notifications/bell.ogg'},
+    {'id': 'chime', 'path': 'assets/audio/notifications/chime.ogg'},
+    {'id': 'ding', 'path': 'assets/audio/notifications/ding.ogg'},
   ];
 
   final List<String> _autoClearOptions = [
@@ -56,6 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _autoStartBreak = widget.settings.autoStartBreak;
+    _modeTransitionDelaySeconds = widget.settings.modeTransitionDelaySeconds;
     _syncMusicWithTimer = widget.settings.syncMusicWithTimer;
     _defaultVolume = widget.settings.defaultVolume;
     _soundEnabled = widget.settings.soundEnabled;
@@ -73,6 +66,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   bool get _hasUnsavedChanges {
     return _autoStartBreak != widget.settings.autoStartBreak ||
+        _modeTransitionDelaySeconds !=
+            widget.settings.modeTransitionDelaySeconds ||
         _syncMusicWithTimer != widget.settings.syncMusicWithTimer ||
         _defaultVolume != widget.settings.defaultVolume ||
         _soundEnabled != widget.settings.soundEnabled ||
@@ -85,6 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void _saveSettings() {
     final updatedSettings = widget.settings.copyWith(
       autoStartBreak: _autoStartBreak,
+      modeTransitionDelaySeconds: _modeTransitionDelaySeconds,
       syncMusicWithTimer: _syncMusicWithTimer,
       defaultVolume: _defaultVolume,
       soundEnabled: _soundEnabled,
@@ -107,7 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.l10n.notificationPlaybackFailed),
+          content: Text(context.settingsL10n.notificationPlaybackFailed),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -122,7 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
 
-    final l10n = context.l10n;
+    final l10n = context.settingsL10n;
     final result = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
@@ -162,7 +158,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = context.settingsL10n;
 
     return PopScope(
       canPop: false,
@@ -209,9 +205,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: l10n.autoStartBreakTitle,
                 subtitle: l10n.autoStartBreakSubtitle,
                 value: _autoStartBreak,
-                onChanged: (value) =>
-                    setState(() => _autoStartBreak = value),
+                onChanged: (value) => setState(() => _autoStartBreak = value),
               ),
+              const SizedBox(height: 12),
+              _buildModeTransitionDelaySlider(l10n),
               const SizedBox(height: 12),
               _buildSwitchTile(
                 title: l10n.syncMusicWithTimerTitle,
@@ -231,8 +228,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: l10n.soundNotificationsTitle,
                 subtitle: l10n.soundNotificationsSubtitle,
                 value: _soundEnabled,
-                onChanged: (value) =>
-                    setState(() => _soundEnabled = value),
+                onChanged: (value) => setState(() => _soundEnabled = value),
               ),
               if (_soundEnabled) ...[
                 const SizedBox(height: 12),
@@ -314,7 +310,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildLanguageDropdown(AppLocalizations l10n) {
+  Widget _buildLanguageDropdown(SettingsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -371,7 +367,72 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildVolumeSlider(AppLocalizations l10n) {
+  Widget _buildModeTransitionDelaySlider(SettingsL10n l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.modeTransitionDelayTitle,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.modeTransitionDelaySubtitle,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(
+                Icons.timer_outlined,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+              Expanded(
+                child: Slider(
+                  value: _modeTransitionDelaySeconds.toDouble(),
+                  min: 0,
+                  max: 15,
+                  divisions: 15,
+                  label: l10n.modeTransitionDelayValue(
+                    _modeTransitionDelaySeconds,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _modeTransitionDelaySeconds = value.round();
+                    });
+                  },
+                ),
+              ),
+              Text(
+                l10n.modeTransitionDelayValue(_modeTransitionDelaySeconds),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVolumeSlider(SettingsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -396,8 +457,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _defaultVolume == 0
                     ? Icons.volume_off
                     : _defaultVolume < 0.5
-                        ? Icons.volume_down
-                        : Icons.volume_up,
+                    ? Icons.volume_down
+                    : Icons.volume_up,
                 color: AppColors.textPrimary,
                 size: 20,
               ),
@@ -406,8 +467,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: _defaultVolume,
                   min: 0.0,
                   max: 1.0,
-                  onChanged: (value) =>
-                      setState(() => _defaultVolume = value),
+                  onChanged: (value) => setState(() => _defaultVolume = value),
                 ),
               ),
               Text(
@@ -425,7 +485,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSoundSelection(AppLocalizations l10n) {
+  Widget _buildSoundSelection(SettingsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -461,9 +521,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         value: option['path'],
                         child: Text(
                           l10n.soundLabel(option['id']!),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                          ),
+                          style: const TextStyle(color: AppColors.textPrimary),
                         ),
                       );
                     }).toList(),
@@ -491,7 +549,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildNotificationVolumeSlider(AppLocalizations l10n) {
+  Widget _buildNotificationVolumeSlider(SettingsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -516,8 +574,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _notificationVolume == 0
                     ? Icons.volume_off
                     : _notificationVolume < 0.5
-                        ? Icons.volume_down
-                        : Icons.volume_up,
+                    ? Icons.volume_down
+                    : Icons.volume_up,
                 color: AppColors.textPrimary,
                 size: 20,
               ),
@@ -546,7 +604,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildAutoClearDropdown(AppLocalizations l10n) {
+  Widget _buildAutoClearDropdown(SettingsL10n l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

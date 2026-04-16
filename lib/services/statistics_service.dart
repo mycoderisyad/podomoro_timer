@@ -46,12 +46,14 @@ class StatisticsService {
         completedSessions: existing.completedSessions + completedSessions,
       );
     } else {
-      records.add(StatisticRecord(
-        date: todayKey,
-        focusSeconds: focusSeconds,
-        breakSeconds: breakSeconds,
-        completedSessions: completedSessions,
-      ));
+      records.add(
+        StatisticRecord(
+          date: todayKey,
+          focusSeconds: focusSeconds,
+          breakSeconds: breakSeconds,
+          completedSessions: completedSessions,
+        ),
+      );
     }
 
     await saveRecords(records);

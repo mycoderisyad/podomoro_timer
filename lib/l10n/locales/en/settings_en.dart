@@ -1,0 +1,37 @@
+const Map<String, String> settingsEn = {
+  'settings': 'Settings',
+  'saveSettingsTooltip': 'Save settings',
+  'behavior': 'Behavior',
+  'autoStartBreakTitle': 'Auto-Start Break',
+  'autoStartBreakSubtitle': 'Automatically start break after a focus session',
+  'modeTransitionDelayTitle': 'Mode Transition Delay',
+  'modeTransitionDelaySubtitle':
+      'Play the notification first, then wait before switching between focus and break.',
+  'syncMusicWithTimerTitle': 'Sync Music with Timer',
+  'syncMusicWithTimerSubtitle':
+      'Automatically play and pause music with the timer',
+  'notifications': 'Notifications',
+  'soundNotificationsTitle': 'Sound Notifications',
+  'soundNotificationsSubtitle': 'Play a sound when a session ends',
+  'notificationSound': 'Notification Sound',
+  'notificationVolume': 'Notification Volume',
+  'testSoundTooltip': 'Test sound',
+  'notificationPlaybackFailed': 'Unable to play notification sound',
+  'audio': 'Audio',
+  'defaultMusicVolume': 'Default Music Volume',
+  'data': 'Data',
+  'autoClearStatistics': 'Auto-Clear Statistics',
+  'autoClearStatisticsSubtitle':
+      'Automatically clear statistics based on a schedule',
+  'autoClearNever': 'Never',
+  'autoClear7Days': 'Every 7 days',
+  'autoClear30Days': 'Every 30 days',
+  'autoClear3Months': 'Every 3 months',
+  'autoClear1Year': 'Every year',
+  'unsavedChangesTitle': 'Unsaved Changes',
+  'unsavedChangesMessage':
+      'You have unsaved changes. What would you like to do?',
+  'bell': 'Bell',
+  'chime': 'Chime',
+  'ding': 'Ding',
+};

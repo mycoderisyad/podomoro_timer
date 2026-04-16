@@ -10,10 +10,12 @@ class TimerCircularDisplay extends StatelessWidget {
   final bool isLandscape;
   final bool isRunning;
   final TimerMode currentMode;
+  final String? modeLabelOverride;
   final int secondsRemaining;
   final int focusDuration;
   final int breakDuration;
   final int completedSessions;
+  final String? statusText;
   final VoidCallback onTimerTapped;
 
   const TimerCircularDisplay({
@@ -22,25 +24,36 @@ class TimerCircularDisplay extends StatelessWidget {
     required this.isLandscape,
     required this.isRunning,
     required this.currentMode,
+    this.modeLabelOverride,
     required this.secondsRemaining,
     required this.focusDuration,
     required this.breakDuration,
     required this.completedSessions,
+    this.statusText,
     required this.onTimerTapped,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = context.timerL10n;
     final timerSize = isLandscape
         ? 180.0
-        : (isLargeScreen ? AppConstants.timerSizeLarge : AppConstants.timerSizeSmall);
+        : (isLargeScreen
+              ? AppConstants.timerSizeLarge
+              : AppConstants.timerSizeSmall);
     final fontSize = isLandscape
         ? 48.0
-        : (isLargeScreen ? AppConstants.timerFontSizeLarge : AppConstants.timerFontSizeSmall);
+        : (isLargeScreen
+              ? AppConstants.timerFontSizeLarge
+              : AppConstants.timerFontSizeSmall);
 
-    final totalDuration = currentMode == TimerMode.focus ? focusDuration : breakDuration;
+    final totalDuration = currentMode == TimerMode.focus
+        ? focusDuration
+        : breakDuration;
     final progress = 1 - (secondsRemaining / totalDuration);
+    final modeLabel =
+        modeLabelOverride ??
+        (currentMode == TimerMode.focus ? l10n.focus : l10n.breakLabel);
 
     return GestureDetector(
       onTap: isRunning ? null : onTimerTapped,
@@ -62,22 +75,42 @@ class TimerCircularDisplay extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                (currentMode == TimerMode.focus ? l10n.focus : l10n.breakLabel)
-                    .toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 14,
+                modeLabel.toUpperCase(),
+                style: TextStyle(
+                  fontSize: statusText != null && statusText!.isNotEmpty
+                      ? 13
+                      : 14,
                   letterSpacing: 3,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: statusText != null && statusText!.isNotEmpty
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
                 ),
+                textAlign: TextAlign.center,
               ),
               TimerDisplay(
                 seconds: secondsRemaining,
                 fontSize: fontSize,
                 color: AppColors.textPrimary,
               ),
+              if (statusText != null && statusText!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  statusText!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(20),
