@@ -1,6 +1,6 @@
-# Podomoro
+# Pomodoro
 
-Podomoro is a Flutter Pomodoro timer with music playback, notification sounds, session statistics, and English or Indonesian UI.
+Pomodoro is a Flutter Pomodoro timer with music playback, notification sounds, session statistics, and English or Indonesian UI.
 
 ## Features
 
@@ -46,5 +46,5 @@ Required GitHub Secrets:
 
 Output files:
 
-- `podomoro-<version>-android-arm64-v8a-release.apk`
-- `podomoro-<version>-android-armeabi-v7a-release.apk`
+- `pomodoro-<version>-android-arm64-v8a-release.apk`
+- `pomodoro-<version>-android-armeabi-v7a-release.apk`

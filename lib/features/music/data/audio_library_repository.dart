@@ -33,7 +33,7 @@ abstract class AudioLibraryRepository {
 
 class MethodChannelAudioLibraryRepository implements AudioLibraryRepository {
   static const MethodChannel _channel = MethodChannel(
-    'podomoro_timer/device_audio',
+    'pomodoro_timer/device_audio',
   );
 
   const MethodChannelAudioLibraryRepository();
