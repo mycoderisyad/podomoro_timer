@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 import '../../domain/music_track.dart';
 
@@ -19,6 +21,8 @@ class MusicQueuePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.musicL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
     final hasSelection = selectedQueue.isNotEmpty;
 
     return AnimatedSize(
@@ -36,11 +40,16 @@ class MusicQueuePreview extends StatelessWidget {
                     offset: const Offset(0, 8),
                   ),
                 ],
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(32),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(dimens.radiusSheet),
                 ),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              padding: EdgeInsets.fromLTRB(
+                dimens.spacingL,
+                dimens.spacingS,
+                dimens.spacingL,
+                dimens.spacingL,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -50,38 +59,34 @@ class MusicQueuePreview extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(dimens.spacingS),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.queue_music_rounded,
-                              size: 18,
+                              size: dimens.iconS,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: dimens.spacingS),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 l10n.playingOrder,
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 14,
-                                    ),
+                                style: typography.titleSmall.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               Text(
                                 l10n.selectedTrackCount(selectedQueue.length),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                style: typography.labelSmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
@@ -91,40 +96,44 @@ class MusicQueuePreview extends StatelessWidget {
                         onPressed: onClearAll,
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.red[400],
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: dimens.spacingM,
+                            vertical: dimens.spacingS,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: dimens.borderRadiusXL,
                           ),
                           backgroundColor: Colors.red.withValues(alpha: 0.05),
                         ),
                         child: Text(
                           l10n.clearAll,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: typography.labelSmall.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: dimens.spacingS),
                   SizedBox(
-                    height: 50,
+                    height: dimens.queuePreviewChipHeight,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: selectedQueue.length,
                       separatorBuilder: (context, index) =>
-                          const SizedBox(width: 10),
+                          SizedBox(width: dimens.spacingS),
                       itemBuilder: (context, index) {
                         final track = selectedQueue[index];
                         return Container(
-                          padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+                          padding: EdgeInsets.fromLTRB(
+                            dimens.spacingXS,
+                            dimens.spacingXS,
+                            dimens.spacingM,
+                            dimens.spacingXS,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.background,
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: dimens.borderRadiusXL,
                             border: Border.all(
                               color: AppColors.primary.withValues(alpha: 0.3),
                               width: 1,
@@ -143,8 +152,8 @@ class MusicQueuePreview extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: dimens.trackNumberSize,
+                                height: dimens.trackNumberSize,
                                 alignment: Alignment.center,
                                 decoration: const BoxDecoration(
                                   color: AppColors.primary,
@@ -152,17 +161,16 @@ class MusicQueuePreview extends StatelessWidget {
                                 ),
                                 child: Text(
                                   '${index + 1}',
-                                  style: const TextStyle(
+                                  style: typography.labelSmall.copyWith(
                                     color: Colors.white,
-                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: dimens.spacingS),
                               ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 120,
+                                constraints: BoxConstraints(
+                                  maxWidth: 120 * dimens.scaleFactor,
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -172,26 +180,25 @@ class MusicQueuePreview extends StatelessWidget {
                                       track.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: typography.bodySmall.copyWith(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 13,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: dimens.spacingS),
                               Material(
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () => onRemoveTrack(track),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: dimens.borderRadiusL,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: EdgeInsets.all(dimens.spacingXS),
                                     child: Icon(
                                       Icons.close_rounded,
-                                      size: 16,
+                                      size: dimens.iconS,
                                       color: AppColors.textSecondary.withValues(
                                         alpha: 0.8,
                                       ),

@@ -11,16 +11,24 @@ class MusicPlaybackController extends ChangeNotifier {
 
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<void>? _playerCompleteSubscription;
+  StreamSubscription<Duration>? _durationSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
 
   List<MusicTrack> _musicQueue = const [];
   int _currentQueueIndex = 0;
   bool _isMusicPlaying = false;
+  Duration _trackDuration = Duration.zero;
+  Duration _playbackPosition = Duration.zero;
 
   MusicPlaybackController({required this.shouldAutoPlay});
 
   List<MusicTrack> get musicQueue => _musicQueue;
   int get currentQueueIndex => _currentQueueIndex;
   bool get isMusicPlaying => _isMusicPlaying;
+  MusicTrack? get currentTrack =>
+      _musicQueue.isEmpty ? null : _musicQueue[_currentQueueIndex];
+  Duration get trackDuration => _trackDuration;
+  Duration get playbackPosition => _playbackPosition;
 
   Future<void> initialize(double initialVolume) async {
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
@@ -35,6 +43,16 @@ class MusicPlaybackController extends ChangeNotifier {
 
     _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((_) {
       unawaited(playNext(autoplay: shouldAutoPlay()));
+    });
+
+    _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
+      _trackDuration = duration;
+      notifyListeners();
+    });
+
+    _positionSubscription = _audioPlayer.onPositionChanged.listen((position) {
+      _playbackPosition = position;
+      notifyListeners();
     });
   }
 
@@ -58,6 +76,8 @@ class MusicPlaybackController extends ChangeNotifier {
     _musicQueue = List<MusicTrack>.from(queue);
     _currentQueueIndex = 0;
     _isMusicPlaying = false;
+    _trackDuration = Duration.zero;
+    _playbackPosition = Duration.zero;
     notifyListeners();
   }
 
@@ -121,6 +141,13 @@ class MusicPlaybackController extends ChangeNotifier {
     await _audioPlayer.setVolume(value);
   }
 
+  Future<void> seek(Duration position) async {
+    final target = position < Duration.zero ? Duration.zero : position;
+    await _audioPlayer.seek(target);
+    _playbackPosition = target;
+    notifyListeners();
+  }
+
   Future<void> pause() async {
     await _audioPlayer.pause();
   }
@@ -140,6 +167,8 @@ class MusicPlaybackController extends ChangeNotifier {
 
     try {
       await _audioPlayer.stop();
+      _trackDuration = Duration.zero;
+      _playbackPosition = Duration.zero;
       await _audioPlayer.play(source);
     } catch (_) {
       await playNext(autoplay: shouldAutoPlay());
@@ -163,6 +192,8 @@ class MusicPlaybackController extends ChangeNotifier {
   void dispose() {
     unawaited(_playerStateSubscription?.cancel());
     unawaited(_playerCompleteSubscription?.cancel());
+    unawaited(_durationSubscription?.cancel());
+    unawaited(_positionSubscription?.cancel());
     _audioPlayer.dispose();
     super.dispose();
   }

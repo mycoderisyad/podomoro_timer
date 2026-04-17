@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../utils/localized_music_track_text.dart';
 import '../../domain/music_track.dart';
@@ -24,12 +26,17 @@ class MusicQueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.musicL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      margin: EdgeInsets.symmetric(
+        vertical: dimens.spacingXS,
+        horizontal: dimens.spacingS,
+      ),
       decoration: BoxDecoration(
         color: isSelected ? AppColors.surfaceLight : AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: dimens.borderRadiusM,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -48,22 +55,22 @@ class MusicQueueCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: dimens.borderRadiusM,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(dimens.spacingM),
             child: Row(
               children: [
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: dimens.buttonHeightSmall,
+                      height: dimens.buttonHeightSmall,
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.textPrimary
                             : AppColors.secondary.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: dimens.borderRadiusM,
                       ),
                       child: Icon(
                         isSelected
@@ -72,7 +79,7 @@ class MusicQueueCard extends StatelessWidget {
                         color: isSelected
                             ? AppColors.surfaceLight
                             : AppColors.textSecondary,
-                        size: 24,
+                        size: dimens.iconM,
                       ),
                     ),
                     if (queuePosition != null)
@@ -80,8 +87,8 @@ class MusicQueueCard extends StatelessWidget {
                         right: -6,
                         top: -6,
                         child: Container(
-                          width: 22,
-                          height: 22,
+                          width: dimens.spacingXL,
+                          height: dimens.spacingXL,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: AppColors.textPrimary,
@@ -93,9 +100,8 @@ class MusicQueueCard extends StatelessWidget {
                           ),
                           child: Text(
                             '$queuePosition',
-                            style: const TextStyle(
+                            style: typography.labelSmall.copyWith(
                               color: AppColors.surfaceLight,
-                              fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -103,28 +109,25 @@ class MusicQueueCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: dimens.spacingM),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         track.title,
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: typography.bodyLarge.copyWith(
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: AppColors.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: dimens.spacingXXS),
                       Text(
                         localizedMusicTrackDescription(context, track),
-                        style: TextStyle(
-                          fontSize: 13,
+                        style: typography.bodySmall.copyWith(
                           color: AppColors.textSecondary.withValues(alpha: 0.8),
                         ),
                         maxLines: 1,

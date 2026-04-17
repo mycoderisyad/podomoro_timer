@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 
 class MusicLibraryToolbar extends StatelessWidget {
@@ -38,61 +40,38 @@ class MusicLibraryToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.musicL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        dimens.spacingL,
+        dimens.spacingS,
+        dimens.spacingL,
+        0,
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Search and filters only affect the device library list.
-          TextField(
-            controller: searchController,
-            onChanged: onSearchChanged,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: l10n.searchMusicHint,
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: searchQuery.isEmpty
-                  ? null
-                  : IconButton(
-                      onPressed: onClearSearch,
-                      icon: const Icon(Icons.close_rounded),
-                      tooltip: l10n.clearSearchTooltip,
-                    ),
-              filled: true,
-              fillColor: AppColors.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String?>(
-            key: ValueKey(selectedFileType),
-            initialValue: selectedFileType,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text(l10n.allAudioTypes),
-              ),
-              ...availableFileTypes.map((fileType) {
-                return DropdownMenuItem<String?>(
-                  value: fileType,
-                  child: Text(l10n.audioTypeLabel(fileType)),
-                );
-              }),
-            ],
-            onChanged: onFileTypeChanged,
-          ),
-          const SizedBox(height: 8),
+          if (dimens.isLandscape)
+            // Landscape: search + dropdown side by side
+            Row(
+              children: [
+                Expanded(child: _buildSearchField(l10n, dimens)),
+                SizedBox(width: dimens.spacingS),
+                SizedBox(
+                  width: 160 * dimens.scaleFactor,
+                  child: _buildDropdown(l10n, dimens, typography),
+                ),
+              ],
+            )
+          else ...[
+            // Portrait: stacked vertically
+            _buildSearchField(l10n, dimens),
+            SizedBox(height: dimens.spacingS),
+            _buildDropdown(l10n, dimens, typography),
+          ],
+          SizedBox(height: dimens.spacingXS),
           Row(
             children: [
               Text(
@@ -101,9 +80,8 @@ class MusicLibraryToolbar extends StatelessWidget {
                   currentPage,
                   totalPages,
                 ),
-                style: const TextStyle(
+                style: typography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -114,17 +92,91 @@ class MusicLibraryToolbar extends StatelessWidget {
                   areAllVisibleTracksSelected
                       ? Icons.remove_done_rounded
                       : Icons.done_all_rounded,
+                  size: dimens.iconS,
                 ),
                 label: Text(
                   areAllVisibleTracksSelected
                       ? l10n.unselectAll
                       : l10n.selectAll,
+                  style: typography.bodySmall,
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSearchField(dynamic l10n, AppDimens dimens) {
+    return TextField(
+      controller: searchController,
+      onChanged: onSearchChanged,
+      textInputAction: TextInputAction.search,
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(
+        hintText: l10n.searchMusicHint,
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: dimens.spacingM,
+          vertical: dimens.spacingS,
+        ),
+        prefixIcon: Icon(Icons.search_rounded, size: dimens.iconS),
+        suffixIcon: searchQuery.isEmpty
+            ? null
+            : IconButton(
+                onPressed: onClearSearch,
+                icon: Icon(Icons.close_rounded, size: dimens.iconS),
+                tooltip: l10n.clearSearchTooltip,
+              ),
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: dimens.borderRadiusM,
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(
+    dynamic l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
+    return DropdownButtonFormField<String?>(
+      key: ValueKey(selectedFileType),
+      initialValue: selectedFileType,
+      isDense: true,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.surface,
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: dimens.spacingM,
+          vertical: dimens.spacingS,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: dimens.borderRadiusM,
+          borderSide: BorderSide.none,
+        ),
+      ),
+      items: [
+        DropdownMenuItem<String?>(
+          value: null,
+          child: Text(l10n.allAudioTypes, style: typography.bodySmall),
+        ),
+        ...availableFileTypes.map((fileType) {
+          return DropdownMenuItem<String?>(
+            value: fileType,
+            child: Text(
+              l10n.audioTypeLabel(fileType),
+              style: typography.bodySmall,
+            ),
+          );
+        }),
+      ],
+      onChanged: onFileTypeChanged,
     );
   }
 }

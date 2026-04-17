@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 import '../../domain/music_track.dart';
 
 class MusicPlayerSection extends StatelessWidget {
-  final bool isLargeScreen;
   final List<MusicTrack> musicQueue;
   final int currentQueueIndex;
   final bool isMusicPlaying;
   final bool isRunning;
   final bool syncMusicWithTimer;
   final double defaultVolume;
+  final Duration playbackPosition;
+  final Duration trackDuration;
   final VoidCallback onShowQueue;
   final VoidCallback onNavigateToMusicSelection;
   final VoidCallback onPlayPrevious;
@@ -19,16 +22,18 @@ class MusicPlayerSection extends StatelessWidget {
   final ValueChanged<bool>? onSyncChanged;
   final Function(int) onJumpToTrack;
   final ValueChanged<double> onVolumeChanged;
+  final ValueChanged<Duration> onSeek;
 
   const MusicPlayerSection({
     super.key,
-    required this.isLargeScreen,
     required this.musicQueue,
     required this.currentQueueIndex,
     required this.isMusicPlaying,
     required this.isRunning,
     required this.syncMusicWithTimer,
     required this.defaultVolume,
+    required this.playbackPosition,
+    required this.trackDuration,
     required this.onShowQueue,
     required this.onNavigateToMusicSelection,
     required this.onPlayPrevious,
@@ -36,254 +41,472 @@ class MusicPlayerSection extends StatelessWidget {
     required this.onSyncChanged,
     required this.onJumpToTrack,
     required this.onVolumeChanged,
+    required this.onSeek,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.musicL10n;
-    final hasQueue = musicQueue.isNotEmpty;
-    final currentTrack = hasQueue ? musicQueue[currentQueueIndex] : null;
+  IconData _volumeIcon(double volume) {
+    if (volume == 0) {
+      return Icons.volume_off_rounded;
+    }
+    if (volume < 0.5) {
+      return Icons.volume_down_rounded;
+    }
+    return Icons.volume_up_rounded;
+  }
 
-    return Container(
-      width: isLargeScreen ? 500 : double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+  String _formatDuration(Duration value) {
+    final totalSeconds = value.inSeconds;
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Future<void> _showVolumeSheet(BuildContext context) async {
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+    double volume = defaultVolume;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(dimens.radiusXL)),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                key: const Key('music_player_select_button'),
-                onTap: onNavigateToMusicSelection,
-                child: Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAccent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.library_music_rounded,
-                    color: AppColors.primary,
-                  ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  dimens.spacingL,
+                  dimens.spacingL,
+                  dimens.spacingL,
+                  dimens.spacingXXL,
                 ),
-              ),
-              const SizedBox(width: 12),
-              if (hasQueue && musicQueue.length > 1)
-                IconButton(
-                  onPressed: isRunning ? onPlayPrevious : null,
-                  icon: const Icon(Icons.skip_previous_rounded),
-                  color: isRunning
-                      ? AppColors.primary
-                      : AppColors.textSecondary.withValues(alpha: 0.3),
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              if (hasQueue && musicQueue.length > 1) const SizedBox(width: 4),
-              Expanded(
-                child: GestureDetector(
-                  key: const Key('music_player_track_area'),
-                  onTap: onNavigateToMusicSelection,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentTrack?.title ?? l10n.noMusicSelected,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.defaultMusicVolume,
+                      style: typography.titleSmall.copyWith(
+                        color: AppColors.textPrimary,
                       ),
-                      Text(
-                        hasQueue
-                            ? l10n.queueSummary(
-                                currentQueueIndex + 1,
-                                musicQueue.length,
-                              )
-                            : l10n.tapToSelectMusic,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (hasQueue && musicQueue.length > 1) const SizedBox(width: 4),
-              if (hasQueue && musicQueue.length > 1)
-                IconButton(
-                  onPressed: isRunning ? onPlayNext : null,
-                  icon: const Icon(Icons.skip_next_rounded),
-                  color: isRunning
-                      ? AppColors.primary
-                      : AppColors.textSecondary.withValues(alpha: 0.3),
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              if (hasQueue) ...[
-                const SizedBox(width: 8),
-                GestureDetector(
-                  key: const Key('music_player_queue_button'),
-                  onTap: onShowQueue,
-                  child: Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceAccent,
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
+                    SizedBox(height: dimens.spacingM),
+                    Row(
                       children: [
-                        const Icon(
-                          Icons.queue_music_rounded,
+                        Icon(
+                          _volumeIcon(volume),
                           color: AppColors.primary,
+                          size: dimens.iconM,
                         ),
-                        Positioned(
-                          right: 4,
-                          top: 4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8),
-                              ),
-                            ),
-                            child: Text(
-                              '${musicQueue.length}',
-                              style: const TextStyle(
-                                color: AppColors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        SizedBox(width: dimens.spacingS),
+                        Expanded(
+                          child: Slider(
+                            value: volume,
+                            onChanged: (value) {
+                              setModalState(() => volume = value);
+                              onVolumeChanged(value);
+                            },
+                          ),
+                        ),
+                        SizedBox(width: dimens.spacingS),
+                        Text(
+                          '${(volume * 100).round()}%',
+                          style: typography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
-              const SizedBox(width: 8),
-              Switch(
-                value: syncMusicWithTimer,
-                onChanged: hasQueue ? onSyncChanged : null,
-                activeTrackColor: AppColors.primary,
               ),
-            ],
-          ),
-          if (hasQueue) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 32,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: musicQueue.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  final isPlaying =
-                      index == currentQueueIndex && isMusicPlaying;
-                  final isCurrent = index == currentQueueIndex;
+            );
+          },
+        );
+      },
+    );
+  }
 
-                  return GestureDetector(
-                    onTap: () => onJumpToTrack(index),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isCurrent
-                            ? AppColors.primary
-                            : AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isCurrent
-                              ? AppColors.primary.withValues(alpha: 0.5)
-                              : Colors.transparent,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isPlaying)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 4),
-                              child: Icon(
-                                Icons.play_arrow_rounded,
-                                size: 14,
-                                color: AppColors.white,
-                              ),
-                            ),
-                          Text(
-                            '${index + 1}. ${musicQueue[index].title}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isCurrent
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              color: isCurrent
-                                  ? AppColors.white
-                                  : AppColors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+  @override
+  Widget build(BuildContext context) {
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+    final hasQueue = musicQueue.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: dimens.spacingL,
+        vertical: dimens.spacingM,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: dimens.borderRadiusL,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04), // Softer shadow
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: hasQueue
+          ? _buildPlayerState(context, dimens, typography)
+          : _buildEmptyState(context, dimens, typography),
+    );
+  }
+
+  Widget _buildEmptyState(
+      BuildContext context, AppDimens dimens, AppTypography typography) {
+    return InkWell(
+      onTap: onNavigateToMusicSelection,
+      borderRadius: dimens.borderRadiusM,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: dimens.spacingS),
+        child: Row(
+          children: [
+            Container(
+              height: dimens.musicIconContainer,
+              width: dimens.musicIconContainer,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAccent,
+                borderRadius: dimens.borderRadiusM,
+              ),
+              child: Icon(
+                Icons.library_music_rounded,
+                color: AppColors.primary,
+                size: dimens.iconM,
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.volume_down_rounded,
-                  size: 18,
-                  color: AppColors.textSecondary,
+            SizedBox(width: dimens.spacingM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.musicL10n.noMusicSelected,
+                    style: typography.titleSmall.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    context.musicL10n.tapToSelectMusic,
+                    style: typography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerState(
+      BuildContext context, AppDimens dimens, AppTypography typography) {
+    // Failsafe bounds check to guarantee no range error
+    final safeIndex = currentQueueIndex < musicQueue.length && currentQueueIndex >= 0 
+        ? currentQueueIndex 
+        : 0;
+    final currentTrack = musicQueue[safeIndex];
+
+    final effectiveDuration = trackDuration > Duration.zero
+        ? trackDuration
+        : const Duration(seconds: 1);
+    final clampedPosition = playbackPosition > effectiveDuration
+        ? effectiveDuration
+        : playbackPosition;
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: onNavigateToMusicSelection,
+              child: Container(
+                height: dimens.musicIconContainer,
+                width: dimens.musicIconContainer,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: dimens.borderRadiusM,
                 ),
-                Expanded(
-                  child: Slider(
-                    value: defaultVolume,
-                    onChanged: onVolumeChanged,
+                child: Icon(
+                  Icons.music_note_rounded,
+                  color: AppColors.primary,
+                  size: dimens.iconM,
+                ),
+              ),
+            ),
+            SizedBox(width: dimens.spacingM),
+            Expanded(
+              child: GestureDetector(
+                onTap: onNavigateToMusicSelection,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _LoopingMarqueeText(
+                      text: currentTrack.title,
+                      style: typography.titleSmall.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      animate: isMusicPlaying,
+                    ),
+                    Text(
+                      '${safeIndex + 1} / ${musicQueue.length}',
+                      style: typography.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 32, // More compact switch appearance vertically
+                  child: Switch(
+                    value: syncMusicWithTimer,
+                    onChanged: onSyncChanged,
+                    activeTrackColor: AppColors.primary,
                   ),
                 ),
                 Text(
-                  '${(defaultVolume * 100).round()}%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  'Sync',
+                  style: typography.labelSmall.copyWith(
                     color: AppColors.textSecondary,
+                    fontSize: 10,
                   ),
                 ),
               ],
             ),
           ],
-        ],
-      ),
+        ),
+        SizedBox(height: dimens.spacingM),
+
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 4,
+            thumbShape: RoundSliderThumbShape(
+              enabledThumbRadius: dimens.spacingS,
+            ),
+            overlayShape: RoundSliderOverlayShape(
+              overlayRadius: dimens.spacingL,
+            ),
+          ),
+          child: Slider(
+            value: clampedPosition.inMilliseconds.toDouble(),
+            min: 0,
+            max: effectiveDuration.inMilliseconds.toDouble(),
+            onChanged: trackDuration > Duration.zero
+                ? (value) => onSeek(Duration(milliseconds: value.round()))
+                : null,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: dimens.spacingXS),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatDuration(clampedPosition),
+                style: typography.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                _formatDuration(trackDuration),
+                style: typography.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              onPressed: () => _showVolumeSheet(context),
+              icon: Icon(_volumeIcon(defaultVolume)),
+              color: AppColors.textSecondary,
+              iconSize: dimens.iconM,
+              tooltip: context.l10n.defaultMusicVolume,
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: isRunning && musicQueue.length > 1
+                      ? onPlayPrevious
+                      : null,
+                  icon: const Icon(Icons.skip_previous_rounded),
+                  color: isRunning
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary.withValues(alpha: 0.3),
+                  iconSize: dimens.iconL,
+                ),
+                SizedBox(width: dimens.spacingS),
+                Container(
+                  width: dimens.iconXXL,
+                  height: dimens.iconXXL,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isMusicPlaying
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    isMusicPlaying
+                        ? Icons.music_note_rounded
+                        : Icons.music_off_rounded,
+                    color: isMusicPlaying
+                        ? AppColors.primary
+                        : AppColors.textSecondary.withValues(alpha: 0.5),
+                    size: dimens.iconM,
+                  ),
+                ),
+                SizedBox(width: dimens.spacingS),
+                IconButton(
+                  onPressed:
+                      isRunning && musicQueue.length > 1 ? onPlayNext : null,
+                  icon: const Icon(Icons.skip_next_rounded),
+                  color: isRunning
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary.withValues(alpha: 0.3),
+                  iconSize: dimens.iconL,
+                ),
+              ],
+            ),
+            IconButton(
+              onPressed: onShowQueue,
+              icon: const Icon(Icons.queue_music_rounded),
+              color: AppColors.textSecondary,
+              iconSize: dimens.iconM,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _LoopingMarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final bool animate;
+
+  const _LoopingMarqueeText({
+    required this.text,
+    required this.style,
+    required this.animate,
+  });
+
+  @override
+  State<_LoopingMarqueeText> createState() => _LoopingMarqueeTextState();
+}
+
+class _LoopingMarqueeTextState extends State<_LoopingMarqueeText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    );
+    _syncAnimationState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LoopingMarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animate != widget.animate || oldWidget.text != widget.text) {
+      _syncAnimationState(reset: oldWidget.text != widget.text);
+    }
+  }
+
+  void _syncAnimationState({bool reset = false}) {
+    if (reset) {
+      _controller.reset();
+    }
+
+    if (widget.animate) {
+      _controller.repeat();
+    } else {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textPainter = TextPainter(
+          text: TextSpan(text: widget.text, style: widget.style),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+
+        final textWidth = textPainter.width;
+        final availableWidth = constraints.maxWidth;
+
+        if (textWidth <= availableWidth || !widget.animate) {
+          return Text(
+            widget.text,
+            style: widget.style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          );
+        }
+
+        const gap = 32.0;
+        final travelWidth = textWidth + gap;
+
+        return ClipRect(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final offset = -travelWidth * _controller.value;
+              return Transform.translate(
+                offset: Offset(offset, 0),
+                child: child,
+              );
+            },
+            child: Row(
+              children: [
+                Text(widget.text, style: widget.style, maxLines: 1),
+                const SizedBox(width: gap),
+                Text(widget.text, style: widget.style, maxLines: 1),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

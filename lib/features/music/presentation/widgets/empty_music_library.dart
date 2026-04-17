@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 
 class EmptyMusicLibrary extends StatelessWidget {
   final IconData icon;
@@ -22,14 +24,17 @@ class EmptyMusicLibrary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: EdgeInsets.symmetric(horizontal: dimens.spacingXXL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(dimens.spacingXXL),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 shape: BoxShape.circle,
@@ -39,32 +44,27 @@ class EmptyMusicLibrary extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                size: 64,
+                size: dimens.iconHero,
                 color: AppColors.textSecondary.withValues(alpha: 0.5),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: dimens.spacingXXL),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+              style: typography.titleMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: dimens.spacingS),
             Text(
               message,
-              style: const TextStyle(
-                fontSize: 14,
+              style: typography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onActionPressed != null) ...[
-              const SizedBox(height: 20),
+              SizedBox(height: dimens.spacingXL),
               FilledButton.icon(
                 onPressed: onActionPressed,
                 icon: Icon(actionIcon),

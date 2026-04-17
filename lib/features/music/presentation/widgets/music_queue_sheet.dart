@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../utils/localized_music_track_text.dart';
 import '../../domain/music_track.dart';
@@ -22,6 +24,9 @@ class MusicQueueSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.musicL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
       minChildSize: 0.4,
@@ -31,42 +36,32 @@ class MusicQueueSheet extends StatelessWidget {
         return Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(dimens.spacingXL),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(dimens.spacingS),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.queue_music_rounded,
-                          size: 20,
+                          size: dimens.iconM,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: dimens.spacingM),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            l10n.musicQueue,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
+                          Text(l10n.musicQueue, style: typography.titleMedium),
                           Text(
                             l10n.trackCount(musicQueue.length),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: typography.bodySmall,
                           ),
                         ],
                       ),
@@ -83,14 +78,14 @@ class MusicQueueSheet extends StatelessWidget {
             Expanded(
               child: ListView.builder(
                 controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: dimens.spacingL),
                 itemCount: musicQueue.length,
                 itemBuilder: (context, index) {
                   final track = musicQueue[index];
                   final isCurrentTrack = index == currentQueueIndex;
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: EdgeInsets.only(bottom: dimens.spacingS),
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -98,17 +93,17 @@ class MusicQueueSheet extends StatelessWidget {
                           onJumpToTrack(index);
                           Navigator.pop(context);
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: dimens.borderRadiusM,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: dimens.spacingL,
+                            vertical: dimens.spacingM,
                           ),
                           decoration: BoxDecoration(
                             color: isCurrentTrack
                                 ? AppColors.primary.withValues(alpha: 0.15)
                                 : AppColors.surface,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: dimens.borderRadiusM,
                             border: Border.all(
                               color: isCurrentTrack
                                   ? AppColors.primary.withValues(alpha: 0.4)
@@ -119,8 +114,8 @@ class MusicQueueSheet extends StatelessWidget {
                           child: Row(
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: dimens.buttonHeightSmall,
+                                height: dimens.buttonHeightSmall,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: isCurrentTrack
@@ -129,15 +124,14 @@ class MusicQueueSheet extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                                 child: isCurrentTrack && isMusicPlaying
-                                    ? const Icon(
+                                    ? Icon(
                                         Icons.play_arrow_rounded,
-                                        size: 18,
+                                        size: dimens.iconM,
                                         color: AppColors.white,
                                       )
                                     : Text(
                                         '${index + 1}',
-                                        style: TextStyle(
-                                          fontSize: 12,
+                                        style: typography.bodyMedium.copyWith(
                                           fontWeight: FontWeight.bold,
                                           color: isCurrentTrack
                                               ? AppColors.white
@@ -145,20 +139,18 @@ class MusicQueueSheet extends StatelessWidget {
                                         ),
                                       ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: dimens.spacingM),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       track.title,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: isCurrentTrack
-                                            ? FontWeight.bold
-                                            : FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
+                                      style: isCurrentTrack
+                                          ? typography.bodyMedium.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            )
+                                          : typography.bodyMedium,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -167,10 +159,7 @@ class MusicQueueSheet extends StatelessWidget {
                                         context,
                                         track,
                                       ),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                      style: typography.labelSmall,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -179,18 +168,17 @@ class MusicQueueSheet extends StatelessWidget {
                               ),
                               if (isCurrentTrack)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: dimens.spacingS,
+                                    vertical: dimens.spacingXS,
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.primary,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: dimens.borderRadiusS,
                                   ),
                                   child: Text(
                                     l10n.playing,
-                                    style: const TextStyle(
-                                      fontSize: 10,
+                                    style: typography.labelSmall.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.white,
                                     ),

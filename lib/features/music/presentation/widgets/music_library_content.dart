@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/music_library_controller.dart';
 import '../../data/audio_library_repository.dart';
@@ -10,6 +11,7 @@ import 'music_queue_card.dart';
 class MusicLibraryContent extends StatelessWidget {
   final MusicLibraryController controller;
   final bool hasSelection;
+  final double selectionBottomInset;
   final VoidCallback onRetryPermission;
   final VoidCallback onRefreshLibrary;
   final VoidCallback onClearFilters;
@@ -18,6 +20,7 @@ class MusicLibraryContent extends StatelessWidget {
     super.key,
     required this.controller,
     required this.hasSelection,
+    required this.selectionBottomInset,
     required this.onRetryPermission,
     required this.onRefreshLibrary,
     required this.onClearFilters,
@@ -26,6 +29,7 @@ class MusicLibraryContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.musicL10n;
+    final dimens = AppDimens.of(context);
     final filteredTracks = controller.filteredTracks;
     final pagedTracks = controller.pagedTracks;
 
@@ -71,42 +75,27 @@ class MusicLibraryContent extends StatelessWidget {
                 actionLabel: l10n.clearSearch,
                 onActionPressed: onClearFilters,
               )
-            : Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        16,
-                        16,
-                        hasSelection ? 24 : 20,
-                      ),
-                      itemCount: pagedTracks.length,
-                      itemBuilder: (context, index) {
-                        final track = pagedTracks[index];
-                        final queuePosition = controller.getQueuePosition(
-                          track,
-                        );
-
-                        return MusicQueueCard(
-                          track: track,
-                          onTap: () => controller.toggleTrackInQueue(track),
-                          isSelected: queuePosition != null,
-                          queuePosition: queuePosition,
-                          onRemoveFromQueue: queuePosition != null
-                              ? () => controller.removeFromQueue(track)
-                              : null,
-                        );
-                      },
-                    ),
-                  ),
-                  if (controller.hasMultiplePages)
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        0,
-                        16,
-                        hasSelection ? 88 : 16,
+            : ListView.builder(
+                padding: EdgeInsets.fromLTRB(
+                  dimens.spacingL,
+                  dimens.isLandscape ? dimens.spacingM : dimens.spacingL,
+                  dimens.spacingL,
+                  controller.hasMultiplePages
+                      ? dimens.spacingM
+                      : (hasSelection
+                            ? selectionBottomInset
+                            : dimens.spacingXL),
+                ),
+                itemCount:
+                    pagedTracks.length + (controller.hasMultiplePages ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == pagedTracks.length) {
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        top: dimens.spacingS,
+                        bottom: hasSelection
+                            ? selectionBottomInset
+                            : dimens.spacingL,
                       ),
                       child: MusicLibraryPaginationBar(
                         currentPage: controller.currentPage,
@@ -114,8 +103,22 @@ class MusicLibraryContent extends StatelessWidget {
                         onPreviousPage: controller.goToPreviousPage,
                         onNextPage: controller.goToNextPage,
                       ),
-                    ),
-                ],
+                    );
+                  }
+
+                  final track = pagedTracks[index];
+                  final queuePosition = controller.getQueuePosition(track);
+
+                  return MusicQueueCard(
+                    track: track,
+                    onTap: () => controller.toggleTrackInQueue(track),
+                    isSelected: queuePosition != null,
+                    queuePosition: queuePosition,
+                    onRemoveFromQueue: queuePosition != null
+                        ? () => controller.removeFromQueue(track)
+                        : null,
+                  );
+                },
               ),
     };
   }
