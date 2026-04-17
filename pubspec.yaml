@@ -1,7 +1,7 @@
-name: pomodoro_timer
+name: podomoro_timer
 description: "simple pomodoro timer"
 publish_to: "none"
-version: 2.2.7+4
+version: 2.2.8+5
 
 environment:
   sdk: ^3.10.7
@@ -34,6 +34,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: "assets/images/logo.png"
+  image_path_android: "assets/images/logo.png"
   adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_monochrome: "assets/images/logo.png"
