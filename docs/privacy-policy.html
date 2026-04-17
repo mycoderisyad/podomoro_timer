@@ -204,6 +204,7 @@
         <li>Displaying timer usage statistics inside the app.</li>
         <li>Reading local device audio so it can be selected or played on the user's Android device.</li>
         <li>Playing built-in notification sounds.</li>
+        <li>Displaying the active timer and playing music in a local notification when the app is in the background.</li>
       </ul>
 
       <h2>4. Data Storage</h2>
@@ -222,10 +223,11 @@
       <ul>
         <li><strong>READ_MEDIA_AUDIO</strong> on Android 13 and above to read audio already stored on the device.</li>
         <li><strong>READ_EXTERNAL_STORAGE</strong> on Android 12 and below for the same purpose.</li>
+        <li><strong>POST_NOTIFICATIONS</strong> on Android 13 and above to display the active timer status and music playback in the background notification.</li>
       </ul>
       <p>
         These permissions are functional and used only when the user wants to grant access
-        to device audio. If the permission is not granted, the device audio feature may not
+        to device audio or display background status. If the permissions are not granted, these specific features may not
         work, but the core timer feature can still be used.
       </p>
 
@@ -298,6 +300,7 @@
         <li>Menampilkan statistik penggunaan timer di dalam aplikasi.</li>
         <li>Membaca audio lokal pengguna agar dapat dipilih atau diputar dari perangkat Android pengguna.</li>
         <li>Memutar suara notifikasi bawaan aplikasi.</li>
+        <li>Menampilkan status timer aktif dan musik yang diputar pada notifikasi lokal saat aplikasi berjalan di latar belakang.</li>
       </ul>
 
       <h2>4. Penyimpanan Data</h2>
@@ -316,10 +319,11 @@
       <ul>
         <li><strong>READ_MEDIA_AUDIO</strong> pada Android 13 ke atas untuk membaca daftar audio yang sudah ada di perangkat.</li>
         <li><strong>READ_EXTERNAL_STORAGE</strong> pada Android 12 ke bawah untuk tujuan yang sama.</li>
+        <li><strong>POST_NOTIFICATIONS</strong> pada Android 13 ke atas untuk menampilkan status timer aktif dan pemutaran musik di notifikasi latar belakang.</li>
       </ul>
       <p>
         Izin tersebut bersifat fungsional dan digunakan hanya saat pengguna ingin memberi
-        akses ke audio perangkat. Jika izin tidak diberikan, bagian fitur audio perangkat
+        akses ke audio perangkat atau menampilkan status di latar belakang. Jika izin tidak diberikan, bagian fitur tersebut
         mungkin tidak dapat digunakan, tetapi fungsi timer dasar tetap dapat berjalan.
       </p>
 
