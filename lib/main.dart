@@ -7,12 +7,14 @@ import 'l10n/app_localizations.dart';
 import 'l10n/l10n.dart';
 import 'pages/timer_page.dart';
 import 'models/app_settings.dart';
+import 'services/background_status_notification_service.dart';
 import 'services/settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('en');
   await initializeDateFormatting('id');
+  await BackgroundStatusNotificationService.initialize();
   final initialSettings = await SettingsService.loadSettings();
   runApp(MainApp(initialSettings: initialSettings));
 }

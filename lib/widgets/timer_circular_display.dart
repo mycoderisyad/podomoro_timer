@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../core/constants/app_constants.dart';
+import '../core/theme/app_dimens.dart';
+import '../core/theme/app_typography.dart';
 import '../l10n/l10n.dart';
 import '../models/timer_mode.dart';
 import 'timer_display.dart';
 
 class TimerCircularDisplay extends StatelessWidget {
-  final bool isLargeScreen;
-  final bool isLandscape;
   final bool isRunning;
   final TimerMode currentMode;
   final String? modeLabelOverride;
@@ -20,8 +19,6 @@ class TimerCircularDisplay extends StatelessWidget {
 
   const TimerCircularDisplay({
     super.key,
-    required this.isLargeScreen,
-    required this.isLandscape,
     required this.isRunning,
     required this.currentMode,
     this.modeLabelOverride,
@@ -36,16 +33,11 @@ class TimerCircularDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.timerL10n;
-    final timerSize = isLandscape
-        ? 180.0
-        : (isLargeScreen
-              ? AppConstants.timerSizeLarge
-              : AppConstants.timerSizeSmall);
-    final fontSize = isLandscape
-        ? 48.0
-        : (isLargeScreen
-              ? AppConstants.timerFontSizeLarge
-              : AppConstants.timerFontSizeSmall);
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
+    final timerSize = dimens.timerSize;
+    final fontSize = dimens.timerFontSize;
 
     final totalDuration = currentMode == TimerMode.focus
         ? focusDuration
@@ -65,7 +57,7 @@ class TimerCircularDisplay extends StatelessWidget {
             height: timerSize,
             child: CircularProgressIndicator(
               value: progress.clamp(0.0, 1.0),
-              strokeWidth: AppConstants.progressStrokeWidth,
+              strokeWidth: dimens.progressStrokeWidth,
               strokeCap: StrokeCap.round,
               backgroundColor: AppColors.surfaceLight,
               valueColor: const AlwaysStoppedAnimation(AppColors.primary),
@@ -76,12 +68,8 @@ class TimerCircularDisplay extends StatelessWidget {
             children: [
               Text(
                 modeLabel.toUpperCase(),
-                style: TextStyle(
-                  fontSize: statusText != null && statusText!.isNotEmpty
-                      ? 13
-                      : 14,
+                style: typography.titleSmall.copyWith(
                   letterSpacing: 3,
-                  fontWeight: FontWeight.w600,
                   color: statusText != null && statusText!.isNotEmpty
                       ? AppColors.primary
                       : AppColors.textSecondary,
@@ -94,33 +82,30 @@ class TimerCircularDisplay extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
               if (statusText != null && statusText!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: dimens.spacingS),
                 Text(
                   statusText!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  style: typography.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
                     color: AppColors.primary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: dimens.spacingS),
               ],
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                padding: EdgeInsets.symmetric(
+                  horizontal: dimens.spacingM,
+                  vertical: dimens.spacingXS,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: dimens.borderRadiusXL,
                 ),
                 child: Text(
                   l10n.sessionCount(completedSessions),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                  style: typography.bodySmall.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),

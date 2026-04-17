@@ -2,6 +2,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/features/settings_l10n.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../models/app_settings.dart';
@@ -119,15 +121,14 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     final l10n = context.settingsL10n;
+    final dimens = AppDimens.of(context);
     final result = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(l10n.unsavedChangesTitle),
           content: Text(l10n.unsavedChangesMessage),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: dimens.borderRadiusL),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, 'cancel'),
@@ -159,6 +160,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.settingsL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
 
     return PopScope(
       canPop: false,
@@ -173,94 +176,93 @@ class _SettingsPageState extends State<SettingsPage> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
             color: AppColors.textPrimary,
+            iconSize: dimens.appBarIconSize,
             onPressed: () => _handleBackNavigation(false),
           ),
-          title: Text(
-            l10n.settings,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
+          title: Text(l10n.settings, style: typography.titleLarge),
           actions: [
             IconButton(
               onPressed: _saveSettings,
               icon: const Icon(Icons.check_circle_rounded),
               color: AppColors.primary,
-              iconSize: 28,
+              iconSize: dimens.appBarIconSize,
               tooltip: l10n.saveSettingsTooltip,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: dimens.spacingS),
           ],
         ),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const SizedBox(height: 8),
-              _buildSectionTitle(l10n.behavior),
-              const SizedBox(height: 16),
-              _buildSwitchTile(
-                title: l10n.autoStartBreakTitle,
-                subtitle: l10n.autoStartBreakSubtitle,
-                value: _autoStartBreak,
-                onChanged: (value) => setState(() => _autoStartBreak = value),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: dimens.maxContentWidth),
+              child: ListView(
+                padding: dimens.pagePadding,
+                children: [
+                  SizedBox(height: dimens.spacingS),
+                  _buildSectionTitle(l10n.behavior, typography),
+                  SizedBox(height: dimens.spacingL),
+                  _buildSwitchTile(
+                    title: l10n.autoStartBreakTitle,
+                    subtitle: l10n.autoStartBreakSubtitle,
+                    value: _autoStartBreak,
+                    onChanged: (value) =>
+                        setState(() => _autoStartBreak = value),
+                    dimens: dimens,
+                    typography: typography,
+                  ),
+                  SizedBox(height: dimens.spacingM),
+                  _buildModeTransitionDelaySlider(l10n, dimens, typography),
+                  SizedBox(height: dimens.spacingM),
+                  _buildSwitchTile(
+                    title: l10n.syncMusicWithTimerTitle,
+                    subtitle: l10n.syncMusicWithTimerSubtitle,
+                    value: _syncMusicWithTimer,
+                    onChanged: (value) =>
+                        setState(() => _syncMusicWithTimer = value),
+                    dimens: dimens,
+                    typography: typography,
+                  ),
+                  SizedBox(height: dimens.spacingXXL),
+                  _buildSectionTitle(l10n.language, typography),
+                  SizedBox(height: dimens.spacingL),
+                  _buildLanguageDropdown(l10n, dimens, typography),
+                  SizedBox(height: dimens.spacingXXL),
+                  _buildSectionTitle(l10n.notifications, typography),
+                  SizedBox(height: dimens.spacingL),
+                  _buildSwitchTile(
+                    title: l10n.soundNotificationsTitle,
+                    subtitle: l10n.soundNotificationsSubtitle,
+                    value: _soundEnabled,
+                    onChanged: (value) => setState(() => _soundEnabled = value),
+                    dimens: dimens,
+                    typography: typography,
+                  ),
+                  if (_soundEnabled) ...[
+                    SizedBox(height: dimens.spacingM),
+                    _buildSoundSelection(l10n, dimens, typography),
+                    SizedBox(height: dimens.spacingM),
+                    _buildNotificationVolumeSlider(l10n, dimens, typography),
+                  ],
+                  SizedBox(height: dimens.spacingXXL),
+                  _buildSectionTitle(l10n.audio, typography),
+                  SizedBox(height: dimens.spacingL),
+                  _buildVolumeSlider(l10n, dimens, typography),
+                  SizedBox(height: dimens.spacingXXL),
+                  _buildSectionTitle(l10n.data, typography),
+                  SizedBox(height: dimens.spacingL),
+                  _buildAutoClearDropdown(l10n, dimens, typography),
+                  SizedBox(height: dimens.spacingXXL),
+                ],
               ),
-              const SizedBox(height: 12),
-              _buildModeTransitionDelaySlider(l10n),
-              const SizedBox(height: 12),
-              _buildSwitchTile(
-                title: l10n.syncMusicWithTimerTitle,
-                subtitle: l10n.syncMusicWithTimerSubtitle,
-                value: _syncMusicWithTimer,
-                onChanged: (value) =>
-                    setState(() => _syncMusicWithTimer = value),
-              ),
-              const SizedBox(height: 24),
-              _buildSectionTitle(l10n.language),
-              const SizedBox(height: 16),
-              _buildLanguageDropdown(l10n),
-              const SizedBox(height: 24),
-              _buildSectionTitle(l10n.notifications),
-              const SizedBox(height: 16),
-              _buildSwitchTile(
-                title: l10n.soundNotificationsTitle,
-                subtitle: l10n.soundNotificationsSubtitle,
-                value: _soundEnabled,
-                onChanged: (value) => setState(() => _soundEnabled = value),
-              ),
-              if (_soundEnabled) ...[
-                const SizedBox(height: 12),
-                _buildSoundSelection(l10n),
-                const SizedBox(height: 12),
-                _buildNotificationVolumeSlider(l10n),
-              ],
-              const SizedBox(height: 24),
-              _buildSectionTitle(l10n.audio),
-              const SizedBox(height: 16),
-              _buildVolumeSlider(l10n),
-              const SizedBox(height: 24),
-              _buildSectionTitle(l10n.data),
-              const SizedBox(height: 16),
-              _buildAutoClearDropdown(l10n),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
-    );
+  Widget _buildSectionTitle(String title, AppTypography typography) {
+    return Text(title, style: typography.titleLarge);
   }
 
   Widget _buildSwitchTile({
@@ -268,12 +270,14 @@ class _SettingsPageState extends State<SettingsPage> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required AppDimens dimens,
+    required AppTypography typography,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Row(
         children: [
@@ -281,22 +285,9 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                Text(title, style: typography.titleSmall),
+                SizedBox(height: dimens.spacingXS),
+                Text(subtitle, style: typography.bodyMedium),
               ],
             ),
           ),
@@ -310,48 +301,40 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildLanguageDropdown(SettingsL10n l10n) {
+  Widget _buildLanguageDropdown(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.language,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.languageSubtitle,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.language, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingXS),
+          Text(l10n.languageSubtitle, style: typography.bodyMedium),
+          SizedBox(height: dimens.spacingM),
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _languageCode,
               isExpanded: true,
               dropdownColor: AppColors.surface,
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_drop_down_rounded,
                 color: AppColors.textSecondary,
+                size: dimens.iconM,
               ),
               items: _languageOptions.map((value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(
                     l10n.languageLabel(value),
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: typography.bodyLarge,
                   ),
                 );
               }).toList(),
@@ -367,39 +350,30 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildModeTransitionDelaySlider(SettingsL10n l10n) {
+  Widget _buildModeTransitionDelaySlider(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.modeTransitionDelayTitle,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.modeTransitionDelaySubtitle,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.modeTransitionDelayTitle, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingXS),
+          Text(l10n.modeTransitionDelaySubtitle, style: typography.bodyMedium),
+          SizedBox(height: dimens.spacingM),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.timer_outlined,
                 color: AppColors.textPrimary,
-                size: 20,
+                size: dimens.iconM,
               ),
               Expanded(
                 child: Slider(
@@ -419,11 +393,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 l10n.modeTransitionDelayValue(_modeTransitionDelaySeconds),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
+                style: typography.labelSmall,
               ),
             ],
           ),
@@ -432,25 +402,22 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildVolumeSlider(SettingsL10n l10n) {
+  Widget _buildVolumeSlider(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.defaultMusicVolume,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.defaultMusicVolume, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingM),
           Row(
             children: [
               Icon(
@@ -460,7 +427,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ? Icons.volume_down
                     : Icons.volume_up,
                 color: AppColors.textPrimary,
-                size: 20,
+                size: dimens.iconM,
               ),
               Expanded(
                 child: Slider(
@@ -472,11 +439,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 '${(_defaultVolume * 100).round()}%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
+                style: typography.labelSmall,
               ),
             ],
           ),
@@ -485,25 +448,22 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSoundSelection(SettingsL10n l10n) {
+  Widget _buildSoundSelection(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.notificationSound,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.notificationSound, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingM),
           Row(
             children: [
               Expanded(
@@ -512,16 +472,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     value: _notificationSound,
                     isExpanded: true,
                     dropdownColor: AppColors.surface,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_drop_down_rounded,
                       color: AppColors.textSecondary,
+                      size: dimens.iconM,
                     ),
                     items: _soundOptions.map((option) {
                       return DropdownMenuItem<String>(
                         value: option['path'],
                         child: Text(
                           l10n.soundLabel(option['id']!),
-                          style: const TextStyle(color: AppColors.textPrimary),
+                          style: typography.bodyLarge,
                         ),
                       );
                     }).toList(),
@@ -534,11 +495,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: dimens.spacingS),
               IconButton(
                 icon: const Icon(Icons.play_circle_fill_rounded),
                 color: AppColors.primary,
-                iconSize: 32,
+                iconSize: dimens.iconXL,
                 tooltip: l10n.testSoundTooltip,
                 onPressed: _playSoundPreview,
               ),
@@ -549,25 +510,22 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildNotificationVolumeSlider(SettingsL10n l10n) {
+  Widget _buildNotificationVolumeSlider(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.notificationVolume,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.notificationVolume, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingM),
           Row(
             children: [
               Icon(
@@ -577,7 +535,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ? Icons.volume_down
                     : Icons.volume_up,
                 color: AppColors.textPrimary,
-                size: 20,
+                size: dimens.iconM,
               ),
               Expanded(
                 child: Slider(
@@ -591,11 +549,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 '${(_notificationVolume * 100).round()}%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
+                style: typography.labelSmall,
               ),
             ],
           ),
@@ -604,48 +558,40 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildAutoClearDropdown(SettingsL10n l10n) {
+  Widget _buildAutoClearDropdown(
+    SettingsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.autoClearStatistics,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.autoClearStatisticsSubtitle,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Text(l10n.autoClearStatistics, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingXS),
+          Text(l10n.autoClearStatisticsSubtitle, style: typography.bodyMedium),
+          SizedBox(height: dimens.spacingM),
           DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _autoClearSchedule,
               isExpanded: true,
               dropdownColor: AppColors.surface,
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_drop_down_rounded,
                 color: AppColors.textSecondary,
+                size: dimens.iconM,
               ),
               items: _autoClearOptions.map((value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(
                     l10n.autoClearLabel(value),
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: typography.bodyLarge,
                   ),
                 );
               }).toList(),

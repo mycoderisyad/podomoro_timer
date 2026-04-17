@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/features/statistics_l10n.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../models/statistic_record.dart';
@@ -78,12 +80,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Future<void> _showClearConfirmation() async {
     final l10n = context.statisticsL10n;
+    final dimens = AppDimens.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.deleteAllDataTitle),
         content: Text(l10n.deleteAllDataMessage),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: dimens.borderRadiusL),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -107,6 +110,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.statisticsL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
+    // Dynamic bar width calculation
+    double calculatedBarWidth = dimens.chartBarWidth;
+    if (_selectedPeriod == StatsPeriod.yearly ||
+        _selectedPeriod == StatsPeriod.monthly) {
+      calculatedBarWidth =
+          dimens.chartBarWidth * 0.7; // Thinner bars for more data
+    } else if (_selectedPeriod == StatsPeriod.daily) {
+      calculatedBarWidth =
+          dimens.chartBarWidth * 2.0; // Thicker bar for single daily
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -118,49 +134,58 @@ class _StatisticsPageState extends State<StatisticsPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.textPrimary,
+          iconSize: dimens.appBarIconSize,
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          l10n.statistics,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
+        title: Text(l10n.statistics, style: typography.titleLarge),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded),
             color: Colors.redAccent,
+            iconSize: dimens.appBarIconSize,
             tooltip: l10n.deleteAllStatisticsTooltip,
             onPressed: _showClearConfirmation,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: dimens.spacingS),
         ],
       ),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildPeriodSelector(l10n),
-                  const SizedBox(height: 20),
-                  _buildSummaryCards(l10n),
-                  const SizedBox(height: 20),
-                  _buildChartSection(l10n),
-                ],
+            : Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: dimens.maxContentWidth),
+                  child: ListView(
+                    padding: dimens.pagePadding,
+                    children: [
+                      _buildPeriodSelector(l10n, dimens, typography),
+                      SizedBox(height: dimens.spacingXL),
+                      _buildSummaryCards(l10n, dimens, typography),
+                      SizedBox(height: dimens.spacingXL),
+                      _buildChartSection(
+                        l10n,
+                        dimens,
+                        typography,
+                        calculatedBarWidth,
+                      ),
+                    ],
+                  ),
+                ),
               ),
       ),
     );
   }
 
-  Widget _buildPeriodSelector(StatisticsL10n l10n) {
+  Widget _buildPeriodSelector(
+    StatisticsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(dimens.spacingXS),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: dimens.borderRadiusM,
       ),
       child: Row(
         children: StatsPeriod.values.map((period) {
@@ -170,16 +195,15 @@ class _StatisticsPageState extends State<StatisticsPage> {
               onTap: () => setState(() => _selectedPeriod = period),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: dimens.spacingM),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : AppColors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: dimens.borderRadiusS,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   _periodLabel(l10n, period),
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: typography.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isSelected
                         ? AppColors.white
@@ -207,30 +231,37 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
-  Widget _buildSummaryCards(StatisticsL10n l10n) {
+  Widget _buildSummaryCards(
+    StatisticsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return Row(
       children: [
         Expanded(
           child: _buildMiniCard(
             label: l10n.sessions,
             value: '$_totalSessions',
-            icon: Icons.check_circle_outline_rounded,
+            dimens: dimens,
+            typography: typography,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: dimens.spacingM),
         Expanded(
           child: _buildMiniCard(
             label: l10n.focus,
             value: l10n.minutesValue(_totalFocusMinutes),
-            icon: Icons.timer_outlined,
+            dimens: dimens,
+            typography: typography,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: dimens.spacingM),
         Expanded(
           child: _buildMiniCard(
             label: l10n.average,
             value: l10n.minutesValue(_avgFocusPerDay.toStringAsFixed(0)),
-            icon: Icons.trending_up_rounded,
+            dimens: dimens,
+            typography: typography,
           ),
         ),
       ],
@@ -240,73 +271,52 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget _buildMiniCard({
     required String label,
     required String value,
-    required IconData icon,
+
+    required AppDimens dimens,
+    required AppTypography typography,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(dimens.miniCardPadding),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: dimens.borderRadiusM,
         border: Border.all(color: AppColors.surface, width: 1.5),
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
+          Text(value, style: typography.titleLarge.copyWith(height: 1.2)),
+          SizedBox(height: dimens.spacingXXS),
+          Text(label, style: typography.bodySmall, textAlign: TextAlign.center),
         ],
       ),
     );
   }
 
-  Widget _buildChartSection(StatisticsL10n l10n) {
+  Widget _buildChartSection(
+    StatisticsL10n l10n,
+    AppDimens dimens,
+    AppTypography typography,
+    double barWidth,
+  ) {
     final chartData = _buildChartData(l10n.localeName);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: dimens.paddingAllL,
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: dimens.borderRadiusL,
         border: Border.all(color: AppColors.surface, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.focusMinutesChartTitle,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 20),
+          Text(l10n.focusMinutesChartTitle, style: typography.titleSmall),
+          SizedBox(height: dimens.spacingXL),
           SizedBox(
-            height: 200,
+            height: dimens.chartHeight,
             child: chartData.isEmpty
                 ? Center(
-                    child: Text(
-                      l10n.noDataYet,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
+                    child: Text(l10n.noDataYet, style: typography.bodyMedium),
                   )
                 : BarChart(
                     BarChartData(
@@ -314,13 +324,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       maxY: _chartMaxY(chartData),
                       barTouchData: BarTouchData(
                         touchTooltipData: BarTouchTooltipData(
+                          getTooltipColor: (_) => AppColors.textPrimary,
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             return BarTooltipItem(
                               l10n.minutesValue(rod.toY.toInt()),
-                              const TextStyle(
+                              typography.bodySmall.copyWith(
                                 color: AppColors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             );
                           },
@@ -336,14 +346,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 32,
+                            reservedSize: dimens.spacingXXXL,
                             getTitlesWidget: (value, meta) {
                               return Text(
                                 '${value.toInt()}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: typography.labelSmall,
                               );
                             },
                           ),
@@ -351,19 +358,21 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 28,
+                            reservedSize: dimens.spacingXXXL + dimens.spacingL,
                             getTitlesWidget: (value, meta) {
                               final idx = value.toInt();
                               if (idx < 0 || idx >= chartData.length) {
                                 return const SizedBox.shrink();
                               }
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 6),
+                              return SideTitleWidget(
+                                meta: meta,
+                                angle: _selectedPeriod == StatsPeriod.daily
+                                    ? 0
+                                    : -0.6,
                                 child: Text(
                                   chartData[idx]['label'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: AppColors.textSecondary,
+                                  style: typography.labelSmall.copyWith(
+                                    fontSize: chartData.length > 10 ? 9 : null,
                                   ),
                                 ),
                               );
@@ -386,7 +395,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             BarChartRodData(
                               toY: (entry.value['value'] as int).toDouble(),
                               color: AppColors.primary,
-                              width: _barWidth,
+                              width: barWidth,
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(4),
                               ),
@@ -400,19 +409,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
         ],
       ),
     );
-  }
-
-  double get _barWidth {
-    switch (_selectedPeriod) {
-      case StatsPeriod.daily:
-        return 24;
-      case StatsPeriod.weekly:
-        return 20;
-      case StatsPeriod.monthly:
-        return 8;
-      case StatsPeriod.yearly:
-        return 14;
-    }
   }
 
   double _chartMaxY(List<Map<String, dynamic>> data) {

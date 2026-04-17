@@ -9,7 +9,7 @@ class TimerDisplay extends StatelessWidget {
   const TimerDisplay({
     super.key,
     required this.seconds,
-    this.fontSize = 72.0,
+    required this.fontSize,
     this.color = AppColors.textPrimary,
   });
 

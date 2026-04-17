@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_dimens.dart';
+import '../core/theme/app_typography.dart';
 
 class ActionButton extends StatelessWidget {
   final IconData icon;
@@ -19,15 +21,18 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
     return Material(
       color: isPrimary ? AppColors.primary : AppColors.surface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: dimens.borderRadiusL,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: dimens.borderRadiusL,
         child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: dimens.buttonHeight,
+          padding: dimens.paddingHorizontalXL,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -35,14 +40,12 @@ class ActionButton extends StatelessWidget {
               Icon(
                 icon,
                 color: isPrimary ? AppColors.white : AppColors.textPrimary,
-                size: 22,
+                size: dimens.iconM,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: dimens.spacingS),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                style: typography.buttonMedium.copyWith(
                   color: isPrimary ? AppColors.white : AppColors.textPrimary,
                 ),
               ),

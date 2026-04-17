@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_dimens.dart';
 import '../l10n/l10n.dart';
 import '../models/timer_mode.dart';
 import 'action_button.dart';
@@ -22,6 +23,7 @@ class TimerControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.timerL10n;
+    final dimens = AppDimens.of(context);
     final targetMode = currentMode == TimerMode.focus
         ? l10n.breakLabel
         : l10n.focus;
@@ -41,7 +43,7 @@ class TimerControls extends StatelessWidget {
                 isPrimary: true,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: dimens.spacingM),
             Expanded(
               child: ActionButton(
                 icon: Icons.refresh_rounded,
@@ -52,7 +54,7 @@ class TimerControls extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: dimens.spacingL),
         SizedBox(
           width: double.infinity,
           child: ActionButton(

@@ -3,14 +3,16 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../models/app_settings.dart';
 import '../../../../models/statistics.dart';
 import '../../../../models/timer_mode.dart';
 import '../../../../pages/settings_page.dart';
 import '../../../../pages/statistics_page.dart';
+import '../../../../services/background_status_notification_service.dart';
 import '../../../../services/notification_audio_service.dart';
 import '../../../../services/settings_service.dart';
 import '../../../../services/statistics_service.dart';
@@ -37,7 +39,7 @@ class TimerPage extends StatefulWidget {
   State<TimerPage> createState() => _TimerPageState();
 }
 
-class _TimerPageState extends State<TimerPage> {
+class _TimerPageState extends State<TimerPage> with WidgetsBindingObserver {
   Timer? _timer;
   Timer? _modeTransitionTimer;
   late final AudioPlayer _notificationPlayer;
@@ -45,6 +47,7 @@ class _TimerPageState extends State<TimerPage> {
   int _secondsRemaining = 1500;
   int _modeTransitionCountdown = 0;
   bool _isRunning = false;
+  bool _isAppInBackground = false;
   TimerMode _currentMode = TimerMode.focus;
   TimerMode? _pendingMode;
   bool _shouldAutoStartPendingMode = false;
@@ -65,12 +68,14 @@ class _TimerPageState extends State<TimerPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _settings = widget.initialSettings;
     _statistics = Statistics();
     _notificationPlayer = AudioPlayer();
     _musicPlaybackController = MusicPlaybackController(
       shouldAutoPlay: () => _shouldSyncMusicToTimer,
     );
+    _musicPlaybackController.addListener(_handleMusicPlaybackChanged);
     unawaited(_musicPlaybackController.initialize(_settings.defaultVolume));
     _secondsRemaining = _settings.focusDuration;
     _runAutoClear();
@@ -87,19 +92,52 @@ class _TimerPageState extends State<TimerPage> {
 
   void _applyMusicSyncState() {
     if (_musicPlaybackController.musicQueue.isEmpty) {
+      if (_isAppInBackground) {
+        unawaited(_refreshBackgroundStatusNotification());
+      }
       return;
     }
 
     unawaited(_musicPlaybackController.syncPlayback());
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _modeTransitionTimer?.cancel();
+    _musicPlaybackController.removeListener(_handleMusicPlaybackChanged);
     _musicPlaybackController.dispose();
     _notificationPlayer.dispose();
+    unawaited(BackgroundStatusNotificationService.cancel());
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _isAppInBackground = false;
+        unawaited(BackgroundStatusNotificationService.cancel());
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        _isAppInBackground = true;
+        unawaited(_refreshBackgroundStatusNotification());
+        break;
+      case AppLifecycleState.detached:
+      case AppLifecycleState.inactive:
+        break;
+    }
+  }
+
+  void _handleMusicPlaybackChanged() {
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _startTimer() {
@@ -124,12 +162,21 @@ class _TimerPageState extends State<TimerPage> {
             _statistics.totalBreakSeconds++;
           }
         });
+        if (_isAppInBackground) {
+          unawaited(_refreshBackgroundStatusNotification());
+        }
       } else {
         _timer?.cancel();
         setState(() => _isRunning = false);
+        if (_isAppInBackground) {
+          unawaited(_refreshBackgroundStatusNotification());
+        }
         _onTimerComplete();
       }
     });
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _pauseTimer() {
@@ -140,6 +187,9 @@ class _TimerPageState extends State<TimerPage> {
     _timer?.cancel();
     setState(() => _isRunning = false);
     _applyMusicSyncState();
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _resetTimer() {
@@ -152,6 +202,9 @@ class _TimerPageState extends State<TimerPage> {
           : _settings.breakDuration;
     });
     _applyMusicSyncState();
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _switchMode() {
@@ -165,6 +218,9 @@ class _TimerPageState extends State<TimerPage> {
           ? _settings.focusDuration
           : _settings.breakDuration;
     });
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _onTimerComplete() {
@@ -225,12 +281,18 @@ class _TimerPageState extends State<TimerPage> {
   Future<void> _replaceMusicQueue(List<MusicTrack> queue) async {
     await _musicPlaybackController.setQueue(queue);
     _applyMusicSyncState();
+    if (_isAppInBackground) {
+      await _refreshBackgroundStatusNotification();
+    }
   }
 
   Future<void> _handleSyncMusicChanged(bool value) async {
     setState(() => _settings.syncMusicWithTimer = value);
     await SettingsService.saveSettings(_settings);
     await _musicPlaybackController.syncPlayback();
+    if (_isAppInBackground) {
+      await _refreshBackgroundStatusNotification();
+    }
   }
 
   void _showQueueBottomSheet() {
@@ -300,6 +362,9 @@ class _TimerPageState extends State<TimerPage> {
       await SettingsService.saveSettings(_settings);
       widget.onSettingsChanged(_settings);
       _applyMusicSyncState();
+      if (_isAppInBackground) {
+        await _refreshBackgroundStatusNotification();
+      }
     }
   }
 
@@ -338,6 +403,9 @@ class _TimerPageState extends State<TimerPage> {
             _secondsRemaining = duration;
           });
           SettingsService.saveSettings(_settings);
+          if (_isAppInBackground) {
+            unawaited(_refreshBackgroundStatusNotification());
+          }
           Navigator.pop(context);
         },
       ),
@@ -347,10 +415,7 @@ class _TimerPageState extends State<TimerPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.timerL10n;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isLargeScreen = screenWidth > AppConstants.largeScreenBreakpoint;
-    final isLandscape = screenWidth > screenHeight;
+    final dimens = AppDimens.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -360,92 +425,53 @@ class _TimerPageState extends State<TimerPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'P O M O D O R O',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 4,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.of(
+            context,
+          ).bodyLarge.copyWith(fontWeight: FontWeight.bold, letterSpacing: 4),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.bar_chart_rounded),
             color: AppColors.textPrimary,
-            iconSize: 28,
+            iconSize: AppDimens.of(context).appBarIconSize,
             onPressed: _navigateToStatistics,
             tooltip: l10n.statisticsTooltip,
           ),
           IconButton(
             icon: const Icon(Icons.settings_rounded),
             color: AppColors.textPrimary,
-            iconSize: 28,
+            iconSize: AppDimens.of(context).appBarIconSize,
             onPressed: _navigateToSettings,
             tooltip: l10n.settingsTooltip,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppDimens.of(context).spacingS),
         ],
       ),
       body: SafeArea(
-        child: isLandscape
-            ? _buildLandscapeLayout(isLargeScreen)
-            : _buildPortraitLayout(isLargeScreen),
+        child: dimens.isLandscape
+            ? _buildLandscapeLayout(dimens)
+            : _buildPortraitLayout(dimens),
       ),
     );
   }
 
-  Widget _buildPortraitLayout(bool isLargeScreen) {
+  Widget _buildPortraitLayout(AppDimens dimens) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompactHeight = constraints.maxHeight < 680;
-        final content = Column(
-          mainAxisSize: isCompactHeight ? MainAxisSize.min : MainAxisSize.max,
-          children: [
-            if (!isCompactHeight) const Spacer(),
-            _buildTimerSection(isLargeScreen, false),
-            SizedBox(height: isCompactHeight ? 20 : 0),
-            if (!isCompactHeight) const Spacer(),
-            TimerControls(
-              isRunning: _isRunning,
-              currentMode: _currentMode,
-              onStartPause: _isRunning ? _pauseTimer : _startTimer,
-              onReset: _resetTimer,
-              onSwitchMode: _switchMode,
-            ),
-            SizedBox(height: isCompactHeight ? 20 : 24),
-            _buildMusicSection(isLargeScreen),
-            SizedBox(height: isCompactHeight ? 16 : 24),
-          ],
-        );
-
-        if (!isCompactHeight) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: content,
-          );
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: content,
-        );
-      },
-    );
-  }
-
-  Widget _buildLandscapeLayout(bool isLargeScreen) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: _buildTimerSection(isLargeScreen, true)),
-          const SizedBox(width: 24),
-          Expanded(
+        final content = Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dimens.maxContentWidth),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: dimens.isCompactHeight
+                  ? MainAxisSize.min
+                  : MainAxisSize.max,
               children: [
+                if (!dimens.isCompactHeight) const Spacer(),
+                _buildTimerSection(),
+                SizedBox(height: dimens.isCompactHeight ? dimens.spacingXL : 0),
+                if (!dimens.isCompactHeight) const Spacer(),
                 TimerControls(
                   isRunning: _isRunning,
                   currentMode: _currentMode,
@@ -453,20 +479,73 @@ class _TimerPageState extends State<TimerPage> {
                   onReset: _resetTimer,
                   onSwitchMode: _switchMode,
                 ),
-                const SizedBox(height: 12),
-                _buildMusicSection(isLargeScreen),
+                SizedBox(
+                  height: dimens.isCompactHeight
+                      ? dimens.spacingL
+                      : dimens.spacingXXL,
+                ),
+                _buildMusicSection(),
+                SizedBox(
+                  height: dimens.isCompactHeight
+                      ? dimens.spacingL
+                      : dimens.spacingXXL,
+                ),
               ],
             ),
           ),
-        ],
+        );
+
+        if (!dimens.isCompactHeight) {
+          return Padding(padding: dimens.paddingHorizontalXXL, child: content);
+        }
+
+        return SingleChildScrollView(
+          padding: dimens.pagePadding,
+          child: content,
+        );
+      },
+    );
+  }
+
+  Widget _buildLandscapeLayout(AppDimens dimens) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: dimens.spacingXXL,
+        vertical: dimens.spacingS,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildTimerSection()),
+              SizedBox(width: dimens.spacingXXL),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TimerControls(
+                      isRunning: _isRunning,
+                      currentMode: _currentMode,
+                      onStartPause: _isRunning ? _pauseTimer : _startTimer,
+                      onReset: _resetTimer,
+                      onSwitchMode: _switchMode,
+                    ),
+                    SizedBox(height: dimens.spacingM),
+                    _buildMusicSection(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildTimerSection(bool isLargeScreen, bool isLandscape) {
+  Widget _buildTimerSection() {
     return TimerCircularDisplay(
-      isLargeScreen: isLargeScreen,
-      isLandscape: isLandscape,
       isRunning: _isRunning || _isTransitioningMode,
       currentMode: _currentMode,
       modeLabelOverride: _transitionModeLabel,
@@ -547,7 +626,13 @@ class _TimerPageState extends State<TimerPage> {
       setState(() {
         _modeTransitionCountdown--;
       });
+      if (_isAppInBackground) {
+        unawaited(_refreshBackgroundStatusNotification());
+      }
     });
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
   }
 
   void _completeModeTransition({
@@ -566,6 +651,9 @@ class _TimerPageState extends State<TimerPage> {
           ? _settings.focusDuration
           : _settings.breakDuration;
     });
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
 
     if (autoStartNextTimer) {
       _startTimer();
@@ -585,21 +673,72 @@ class _TimerPageState extends State<TimerPage> {
       _shouldAutoStartPendingMode = false;
       _modeTransitionCountdown = 0;
     });
+    if (_isAppInBackground) {
+      unawaited(_refreshBackgroundStatusNotification());
+    }
+  }
+
+  String _formatNotificationTime(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String get _notificationModeLabel {
+    if (_pendingMode != null && _modeTransitionCountdown > 0) {
+      return _pendingMode == TimerMode.focus
+          ? context.timerL10n.focus
+          : context.timerL10n.breakLabel;
+    }
+
+    return _currentMode == TimerMode.focus
+        ? context.timerL10n.focus
+        : context.timerL10n.breakLabel;
+  }
+
+  String get _notificationTimerLabel {
+    if (_pendingMode != null && _modeTransitionCountdown > 0) {
+      return _formatNotificationTime(_modeTransitionCountdown);
+    }
+
+    return _formatNotificationTime(_secondsRemaining);
+  }
+
+  Future<void> _refreshBackgroundStatusNotification() async {
+    if (!mounted || !_isAppInBackground) {
+      return;
+    }
+
+    final currentTrack = _musicPlaybackController.currentTrack;
+    final shouldShowTrack =
+        _settings.syncMusicWithTimer &&
+        currentTrack != null &&
+        _musicPlaybackController.musicQueue.isNotEmpty;
+
+    final body = shouldShowTrack
+        ? '${context.musicL10n.playing}: ${currentTrack.title}'
+        : (_transitionStatusText ?? context.l10n.appTitle());
+
+    await BackgroundStatusNotificationService.show(
+      title: '$_notificationModeLabel • $_notificationTimerLabel',
+      body: body,
+    );
   }
 
   // Keep music controls separate from the timer layout logic.
-  Widget _buildMusicSection(bool isLargeScreen) {
+  Widget _buildMusicSection() {
     return AnimatedBuilder(
       animation: _musicPlaybackController,
       builder: (context, _) {
         return MusicPlayerSection(
-          isLargeScreen: isLargeScreen,
           musicQueue: _musicPlaybackController.musicQueue,
           currentQueueIndex: _musicPlaybackController.currentQueueIndex,
           isMusicPlaying: _musicPlaybackController.isMusicPlaying,
           isRunning: _isRunning,
           syncMusicWithTimer: _settings.syncMusicWithTimer,
           defaultVolume: _settings.defaultVolume,
+          playbackPosition: _musicPlaybackController.playbackPosition,
+          trackDuration: _musicPlaybackController.trackDuration,
           onShowQueue: _showQueueBottomSheet,
           onNavigateToMusicSelection: _navigateToMusicSelection,
           onPlayPrevious: () {
@@ -629,6 +768,9 @@ class _TimerPageState extends State<TimerPage> {
             setState(() => _settings.defaultVolume = value);
             unawaited(_musicPlaybackController.setVolume(value));
             unawaited(SettingsService.saveSettings(_settings));
+          },
+          onSeek: (position) {
+            unawaited(_musicPlaybackController.seek(position));
           },
         );
       },

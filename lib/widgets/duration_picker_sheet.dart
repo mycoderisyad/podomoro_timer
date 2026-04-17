@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_dimens.dart';
+import '../core/theme/app_typography.dart';
 import '../l10n/l10n.dart';
 
 class DurationPickerSheet extends StatefulWidget {
@@ -62,166 +64,158 @@ class _DurationPickerSheetState extends State<DurationPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.timerL10n;
+    final dimens = AppDimens.of(context);
+    final typography = AppTypography.of(context);
+
     return Padding(
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        left: dimens.spacingXXL,
+        right: dimens.spacingXXL,
+        top: dimens.spacingXXL,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + dimens.spacingXXL,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(widget.title, style: typography.titleLarge),
+                  // Toggle between preset and custom
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _isCustomMode = !_isCustomMode;
+                        if (_isCustomMode) {
+                          _customMinutesController.text =
+                              (widget.currentValue ~/ 60).toString();
+                        }
+                      });
+                    },
+                    icon: Icon(
+                      _isCustomMode
+                          ? Icons.grid_view_rounded
+                          : Icons.edit_rounded,
+                      size: dimens.iconS,
+                    ),
+                    label: Text(
+                      _isCustomMode ? l10n.preset : l10n.custom,
+                      style: typography.buttonMedium,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
                   ),
-                ),
-                // Toggle between preset and custom
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _isCustomMode = !_isCustomMode;
-                      if (_isCustomMode) {
-                        _customMinutesController.text =
-                            (widget.currentValue ~/ 60).toString();
-                      }
-                    });
-                  },
-                  icon: Icon(
-                    _isCustomMode
-                        ? Icons.grid_view_rounded
-                        : Icons.edit_rounded,
-                    size: 18,
+                ],
+              ),
+              SizedBox(height: dimens.spacingXL),
+              if (_isCustomMode) ...[
+                // Custom duration input
+                Container(
+                  padding: dimens.paddingAllL,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: dimens.borderRadiusM,
+                    border: Border.all(color: AppColors.secondary, width: 2),
                   ),
-                  label: Text(_isCustomMode ? l10n.preset : l10n.custom),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (_isCustomMode) ...[
-              // Custom duration input
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.secondary, width: 2),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _customMinutesController,
-                            focusNode: _focusNode,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(3),
-                            ],
-                            decoration: InputDecoration(
-                              labelText: l10n.minutes,
-                              hintText: l10n.enterMinutes,
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _customMinutesController,
+                              focusNode: _focusNode,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(3),
+                              ],
+                              decoration: InputDecoration(
+                                labelText: l10n.minutes,
+                                hintText: l10n.enterMinutes,
+                                border: const OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: dimens.spacingL,
+                                  vertical: dimens.spacingM,
+                                ),
+                              ),
+                              style: typography.titleMedium,
+                              onSubmitted: (_) => _applyCustomDuration(),
+                            ),
+                          ),
+                          SizedBox(width: dimens.spacingM),
+                          ElevatedButton(
+                            onPressed: _applyCustomDuration,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: dimens.spacingXXL,
+                                vertical: dimens.spacingL,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: dimens.borderRadiusM,
                               ),
                             ),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            onSubmitted: (_) => _applyCustomDuration(),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _applyCustomDuration,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            child: Text(
+                              l10n.apply,
+                              style: typography.buttonMedium,
                             ),
                           ),
-                          child: Text(
-                            l10n.apply,
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.durationHint,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                        ],
                       ),
-                    ),
-                  ],
+                      SizedBox(height: dimens.spacingS),
+                      Text(l10n.durationHint, style: typography.bodySmall),
+                    ],
+                  ),
                 ),
-              ),
-            ] else ...[
-              // Preset options
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: widget.options.map((duration) {
-                  final isSelected = widget.currentValue == duration;
-                  final minutes = duration ~/ 60;
-                  return GestureDetector(
-                    onTap: () => widget.onSelected(duration),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+              ] else ...[
+                // Preset options
+                Wrap(
+                  spacing: dimens.spacingM,
+                  runSpacing: dimens.spacingM,
+                  children: widget.options.map((duration) {
+                    final isSelected = widget.currentValue == duration;
+                    final minutes = duration ~/ 60;
+                    return GestureDetector(
+                      onTap: () => widget.onSelected(duration),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: dimens.spacingXL,
+                          vertical: dimens.spacingL,
+                        ),
+                        decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.secondary,
-                          width: 2,
+                              : AppColors.white,
+                          borderRadius: dimens.borderRadiusM,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.secondary,
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          l10n.minutesValue(minutes),
+                          style: typography.titleSmall.copyWith(
+                            color: isSelected
+                                ? AppColors.white
+                                : AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        l10n.minutesValue(minutes),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? AppColors.white
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              SizedBox(height: dimens.spacingL),
             ],
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );
