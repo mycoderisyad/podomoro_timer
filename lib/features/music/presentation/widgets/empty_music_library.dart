@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
 
 class EmptyMusicLibrary extends StatelessWidget {
   final IconData icon;

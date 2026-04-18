@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/l10n.dart';
-import '../../domain/music_track.dart';
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
 
 class MusicPlayerSection extends StatelessWidget {
   final List<MusicTrack> musicQueue;
@@ -70,7 +70,9 @@ class MusicPlayerSection extends StatelessWidget {
       context: context,
       backgroundColor: AppColors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(dimens.radiusXL)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(dimens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -162,7 +164,10 @@ class MusicPlayerSection extends StatelessWidget {
   }
 
   Widget _buildEmptyState(
-      BuildContext context, AppDimens dimens, AppTypography typography) {
+    BuildContext context,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     return InkWell(
       onTap: onNavigateToMusicSelection,
       borderRadius: dimens.borderRadiusM,
@@ -214,10 +219,14 @@ class MusicPlayerSection extends StatelessWidget {
   }
 
   Widget _buildPlayerState(
-      BuildContext context, AppDimens dimens, AppTypography typography) {
+    BuildContext context,
+    AppDimens dimens,
+    AppTypography typography,
+  ) {
     // Failsafe bounds check to guarantee no range error
-    final safeIndex = currentQueueIndex < musicQueue.length && currentQueueIndex >= 0 
-        ? currentQueueIndex 
+    final safeIndex =
+        currentQueueIndex < musicQueue.length && currentQueueIndex >= 0
+        ? currentQueueIndex
         : 0;
     final currentTrack = musicQueue[safeIndex];
 
@@ -337,7 +346,7 @@ class MusicPlayerSection extends StatelessWidget {
             ],
           ),
         ),
-        
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -384,8 +393,9 @@ class MusicPlayerSection extends StatelessWidget {
                 ),
                 SizedBox(width: dimens.spacingS),
                 IconButton(
-                  onPressed:
-                      isRunning && musicQueue.length > 1 ? onPlayNext : null,
+                  onPressed: isRunning && musicQueue.length > 1
+                      ? onPlayNext
+                      : null,
                   icon: const Icon(Icons.skip_next_rounded),
                   color: isRunning
                       ? AppColors.textPrimary

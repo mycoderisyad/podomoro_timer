@@ -88,7 +88,13 @@ class AppLocalizations {
   String get sessions => _text('sessions');
   String get focus => _text('focus');
   String get breakLabel => _text('break');
-  String get average => _text('average');
+  String get categoryOverview => _text('categoryOverview');
+  String get uncategorizedCategory => _text('uncategorizedCategory');
+  String get noCategoryData => _text('noCategoryData');
+  String get totalFocusTime => _text('totalFocusTime');
+  String get totalBreakTime => _text('totalBreakTime');
+  String get averageFocusPerDay => _text('averageFocusPerDay');
+  String get averageBreakPerDay => _text('averageBreakPerDay');
   String get focusMinutesChartTitle => _text('focusMinutesChartTitle');
   String get noDataYet => _text('noDataYet');
 
@@ -103,6 +109,9 @@ class AppLocalizations {
   String get custom => _text('custom');
   String get minutes => _text('minutes');
   String get enterMinutes => _text('enterMinutes');
+  String get sessionNameOptional => _text('sessionNameOptional');
+  String get sessionNameHint => _text('sessionNameHint');
+  String get sessionNameHelper => _text('sessionNameHelper');
   String get apply => _text('apply');
   String get durationHint => _text('durationHint');
   String get start => _text('start');
@@ -120,7 +129,6 @@ class AppLocalizations {
   String get clearAll => _text('clearAll');
   String get selectAll => _text('selectAll');
   String get unselectAll => _text('unselectAll');
-  String get audioTypeFilterLabel => _text('audioTypeFilterLabel');
   String get allAudioTypes => _text('allAudioTypes');
   String get previousPage => _text('previousPage');
   String get nextPage => _text('nextPage');
@@ -190,12 +198,6 @@ class AppLocalizations {
 
   String sessionCount(int count) {
     return isEnglish ? 'Session #$count' : 'Sesi #$count';
-  }
-
-  String queueSummary(int current, int total) {
-    return isEnglish
-        ? 'Queue: $current/$total - Tap to edit'
-        : 'Antrean: $current/$total - Ketuk untuk ubah';
   }
 
   String trackCount(int count) {

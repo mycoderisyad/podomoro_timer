@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/audio_library_repository.dart';
-import '../domain/music_track.dart';
+import 'package:podomoro_timer/features/music/data/audio_library_repository.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
 
 class MusicLibraryController extends ChangeNotifier {
   static const int pageSize = 20;

@@ -3,9 +3,31 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
-import '../domain/music_track.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
 
-class MusicPlaybackController extends ChangeNotifier {
+abstract class MusicPlaybackHandle implements Listenable {
+  List<MusicTrack> get musicQueue;
+  int get currentQueueIndex;
+  bool get isMusicPlaying;
+  MusicTrack? get currentTrack;
+  Duration get trackDuration;
+  Duration get playbackPosition;
+
+  Future<void> initialize(double initialVolume);
+  Future<void> syncPlayback();
+  Future<void> setQueue(List<MusicTrack> queue);
+  Future<void> playOrResume();
+  Future<void> playNext({required bool autoplay});
+  Future<void> playPrevious({required bool autoplay});
+  Future<void> jumpToTrack(int index, {required bool autoplay});
+  Future<void> setVolume(double value);
+  Future<void> seek(Duration position);
+  Future<void> pause();
+  void dispose();
+}
+
+class MusicPlaybackController extends ChangeNotifier
+    implements MusicPlaybackHandle {
   final bool Function() shouldAutoPlay;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -22,14 +44,26 @@ class MusicPlaybackController extends ChangeNotifier {
 
   MusicPlaybackController({required this.shouldAutoPlay});
 
+  @override
   List<MusicTrack> get musicQueue => _musicQueue;
+
+  @override
   int get currentQueueIndex => _currentQueueIndex;
+
+  @override
   bool get isMusicPlaying => _isMusicPlaying;
+
+  @override
   MusicTrack? get currentTrack =>
       _musicQueue.isEmpty ? null : _musicQueue[_currentQueueIndex];
+
+  @override
   Duration get trackDuration => _trackDuration;
+
+  @override
   Duration get playbackPosition => _playbackPosition;
 
+  @override
   Future<void> initialize(double initialVolume) async {
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
     await _audioPlayer.setVolume(initialVolume);
@@ -56,6 +90,7 @@ class MusicPlaybackController extends ChangeNotifier {
     });
   }
 
+  @override
   Future<void> syncPlayback() async {
     if (_musicQueue.isEmpty) {
       return;
@@ -71,6 +106,7 @@ class MusicPlaybackController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> setQueue(List<MusicTrack> queue) async {
     await _audioPlayer.stop();
     _musicQueue = List<MusicTrack>.from(queue);
@@ -81,6 +117,7 @@ class MusicPlaybackController extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> playOrResume() async {
     if (_musicQueue.isEmpty) {
       return;
@@ -97,6 +134,7 @@ class MusicPlaybackController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> playNext({required bool autoplay}) async {
     if (_musicQueue.isEmpty) {
       return;
@@ -110,6 +148,7 @@ class MusicPlaybackController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> playPrevious({required bool autoplay}) async {
     if (_musicQueue.isEmpty) {
       return;
@@ -124,6 +163,7 @@ class MusicPlaybackController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> jumpToTrack(int index, {required bool autoplay}) async {
     if (_musicQueue.isEmpty || index < 0 || index >= _musicQueue.length) {
       return;
@@ -137,10 +177,12 @@ class MusicPlaybackController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<void> setVolume(double value) async {
     await _audioPlayer.setVolume(value);
   }
 
+  @override
   Future<void> seek(Duration position) async {
     final target = position < Duration.zero ? Duration.zero : position;
     await _audioPlayer.seek(target);
@@ -148,6 +190,7 @@ class MusicPlaybackController extends ChangeNotifier {
     notifyListeners();
   }
 
+  @override
   Future<void> pause() async {
     await _audioPlayer.pause();
   }

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../domain/music_track.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
 
 enum MusicLibraryPermissionState {
   unknown,

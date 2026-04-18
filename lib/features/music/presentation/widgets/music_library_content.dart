@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../l10n/l10n.dart';
-import '../../application/music_library_controller.dart';
-import '../../data/audio_library_repository.dart';
-import 'empty_music_library.dart';
-import 'music_library_pagination_bar.dart';
-import 'music_queue_card.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/features/music/application/music_library_controller.dart';
+import 'package:podomoro_timer/features/music/data/audio_library_repository.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/empty_music_library.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/music_library_pagination_bar.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/music_queue_card.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
 
 class MusicLibraryContent extends StatelessWidget {
   final MusicLibraryController controller;

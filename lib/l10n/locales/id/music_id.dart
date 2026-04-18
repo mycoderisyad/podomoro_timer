@@ -7,7 +7,6 @@ const Map<String, String> musicId = {
   'clearAll': 'Hapus Semua',
   'selectAll': 'Pilih semua',
   'unselectAll': 'Batalkan semua',
-  'audioTypeFilterLabel': 'Jenis audio',
   'allAudioTypes': 'Semua jenis',
   'previousPage': 'Halaman sebelumnya',
   'nextPage': 'Halaman berikutnya',

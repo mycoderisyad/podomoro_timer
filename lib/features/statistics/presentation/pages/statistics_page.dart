@@ -1,16 +1,15 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/features/statistics_l10n.dart';
-import '../../../../l10n/l10n.dart';
-import '../../../../models/statistic_record.dart';
-import '../../../../services/statistics_service.dart';
-
-enum StatsPeriod { daily, weekly, monthly, yearly }
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
+import 'package:podomoro_timer/features/statistics/application/statistics_view_controller.dart';
+import 'package:podomoro_timer/features/statistics/presentation/widgets/statistics_category_chart_card.dart';
+import 'package:podomoro_timer/features/statistics/presentation/widgets/statistics_period_selector.dart';
+import 'package:podomoro_timer/features/statistics/presentation/widgets/statistics_summary_strip.dart';
+import 'package:podomoro_timer/features/statistics/presentation/widgets/statistics_time_chart_card.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
+import 'package:podomoro_timer/shared/statistics/statistics_repository.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -20,62 +19,21 @@ class StatisticsPage extends StatefulWidget {
 }
 
 class _StatisticsPageState extends State<StatisticsPage> {
-  StatsPeriod _selectedPeriod = StatsPeriod.daily;
-  List<StatisticRecord> _allRecords = [];
-  bool _isLoading = true;
+  late final StatisticsViewController _controller;
 
   @override
   void initState() {
     super.initState();
-    _loadRecords();
-  }
-
-  Future<void> _loadRecords() async {
-    final records = await StatisticsService.loadRecords();
-    if (mounted) {
-      setState(() {
-        _allRecords = records;
-        _isLoading = false;
-      });
-    }
-  }
-
-  List<StatisticRecord> get _filteredRecords {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    DateTime start;
-
-    switch (_selectedPeriod) {
-      case StatsPeriod.daily:
-        start = today;
-        break;
-      case StatsPeriod.weekly:
-        start = today.subtract(const Duration(days: 6));
-        break;
-      case StatsPeriod.monthly:
-        start = today.subtract(const Duration(days: 29));
-        break;
-      case StatsPeriod.yearly:
-        start = DateTime(now.year - 1, now.month, now.day);
-        break;
-    }
-
-    return StatisticsService.filterByRange(
-      _allRecords,
-      start,
-      today.add(const Duration(days: 1)),
+    _controller = StatisticsViewController(
+      statisticsRepository: SharedPreferencesStatisticsRepository(),
     );
+    _controller.initialize();
   }
 
-  int get _totalSessions =>
-      _filteredRecords.fold(0, (sum, r) => sum + r.completedSessions);
-
-  int get _totalFocusMinutes =>
-      _filteredRecords.fold(0, (sum, r) => sum + r.focusMinutes);
-
-  double get _avgFocusPerDay {
-    if (_filteredRecords.isEmpty) return 0;
-    return _totalFocusMinutes / _filteredRecords.length;
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _showClearConfirmation() async {
@@ -102,8 +60,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
 
     if (result == true && mounted) {
-      await StatisticsService.clearAllRecords();
-      setState(() => _allRecords = []);
+      await _controller.clearAllRecords();
     }
   }
 
@@ -112,439 +69,184 @@ class _StatisticsPageState extends State<StatisticsPage> {
     final l10n = context.statisticsL10n;
     final dimens = AppDimens.of(context);
     final typography = AppTypography.of(context);
+    final minuteUnitLabel = context.l10n.isEnglish ? 'min' : 'menit';
 
-    // Dynamic bar width calculation
-    double calculatedBarWidth = dimens.chartBarWidth;
-    if (_selectedPeriod == StatsPeriod.yearly ||
-        _selectedPeriod == StatsPeriod.monthly) {
-      calculatedBarWidth =
-          dimens.chartBarWidth * 0.7; // Thinner bars for more data
-    } else if (_selectedPeriod == StatsPeriod.daily) {
-      calculatedBarWidth =
-          dimens.chartBarWidth * 2.0; // Thicker bar for single daily
-    }
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final chartData = _controller.buildTimeChartData(
+          l10n.localeName,
+          todayLabel: l10n.today,
+        );
+        final categoryData = _controller.categorySummaries(
+          l10n.uncategorizedCategory,
+        );
+        final mobileCardWidth = MediaQuery.of(context).size.width * 0.85;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          color: AppColors.textPrimary,
-          iconSize: dimens.appBarIconSize,
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(l10n.statistics, style: typography.titleLarge),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline_rounded),
-            color: Colors.redAccent,
-            iconSize: dimens.appBarIconSize,
-            tooltip: l10n.deleteAllStatisticsTooltip,
-            onPressed: _showClearConfirmation,
-          ),
-          SizedBox(width: dimens.spacingS),
-        ],
-      ),
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: dimens.maxContentWidth),
-                  child: ListView(
-                    padding: dimens.pagePadding,
-                    children: [
-                      _buildPeriodSelector(l10n, dimens, typography),
-                      SizedBox(height: dimens.spacingXL),
-                      _buildSummaryCards(l10n, dimens, typography),
-                      SizedBox(height: dimens.spacingXL),
-                      _buildChartSection(
-                        l10n,
-                        dimens,
-                        typography,
-                        calculatedBarWidth,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildPeriodSelector(
-    StatisticsL10n l10n,
-    AppDimens dimens,
-    AppTypography typography,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(dimens.spacingXS),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: dimens.borderRadiusM,
-      ),
-      child: Row(
-        children: StatsPeriod.values.map((period) {
-          final isSelected = _selectedPeriod == period;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedPeriod = period),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: dimens.spacingM),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.transparent,
-                  borderRadius: dimens.borderRadiusS,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _periodLabel(l10n, period),
-                  style: typography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isSelected
-                        ? AppColors.white
-                        : AppColors.textSecondary,
-                  ),
-                ),
-              ),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: AppColors.textPrimary,
+              iconSize: dimens.appBarIconSize,
+              onPressed: () => Navigator.pop(context),
             ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  String _periodLabel(StatisticsL10n l10n, StatsPeriod period) {
-    switch (period) {
-      case StatsPeriod.daily:
-        return l10n.today;
-      case StatsPeriod.weekly:
-        return l10n.week;
-      case StatsPeriod.monthly:
-        return l10n.month;
-      case StatsPeriod.yearly:
-        return l10n.year;
-    }
-  }
-
-  Widget _buildSummaryCards(
-    StatisticsL10n l10n,
-    AppDimens dimens,
-    AppTypography typography,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildMiniCard(
-            label: l10n.sessions,
-            value: '$_totalSessions',
-            dimens: dimens,
-            typography: typography,
+            title: Text(l10n.statistics, style: typography.titleLarge),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: Colors.redAccent,
+                iconSize: dimens.appBarIconSize,
+                tooltip: l10n.deleteAllStatisticsTooltip,
+                onPressed: _showClearConfirmation,
+              ),
+              SizedBox(width: dimens.spacingS),
+            ],
           ),
-        ),
-        SizedBox(width: dimens.spacingM),
-        Expanded(
-          child: _buildMiniCard(
-            label: l10n.focus,
-            value: l10n.minutesValue(_totalFocusMinutes),
-            dimens: dimens,
-            typography: typography,
-          ),
-        ),
-        SizedBox(width: dimens.spacingM),
-        Expanded(
-          child: _buildMiniCard(
-            label: l10n.average,
-            value: l10n.minutesValue(_avgFocusPerDay.toStringAsFixed(0)),
-            dimens: dimens,
-            typography: typography,
-          ),
-        ),
-      ],
-    );
-  }
+          body: SafeArea(
+            child: _controller.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 840;
 
-  Widget _buildMiniCard({
-    required String label,
-    required String value,
-
-    required AppDimens dimens,
-    required AppTypography typography,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(dimens.miniCardPadding),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: dimens.borderRadiusM,
-        border: Border.all(color: AppColors.surface, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Text(value, style: typography.titleLarge.copyWith(height: 1.2)),
-          SizedBox(height: dimens.spacingXXS),
-          Text(label, style: typography.bodySmall, textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChartSection(
-    StatisticsL10n l10n,
-    AppDimens dimens,
-    AppTypography typography,
-    double barWidth,
-  ) {
-    final chartData = _buildChartData(l10n.localeName);
-
-    return Container(
-      padding: dimens.paddingAllL,
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: dimens.borderRadiusL,
-        border: Border.all(color: AppColors.surface, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.focusMinutesChartTitle, style: typography.titleSmall),
-          SizedBox(height: dimens.spacingXL),
-          SizedBox(
-            height: dimens.chartHeight,
-            child: chartData.isEmpty
-                ? Center(
-                    child: Text(l10n.noDataYet, style: typography.bodyMedium),
-                  )
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: _chartMaxY(chartData),
-                      barTouchData: BarTouchData(
-                        touchTooltipData: BarTouchTooltipData(
-                          getTooltipColor: (_) => AppColors.textPrimary,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            return BarTooltipItem(
-                              l10n.minutesValue(rod.toY.toInt()),
-                              typography.bodySmall.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: dimens.spacingXXXL,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${value.toInt()}',
-                                style: typography.labelSmall,
-                              );
-                            },
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isWide ? 980 : dimens.maxContentWidth,
                           ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: dimens.spacingXXXL + dimens.spacingL,
-                            getTitlesWidget: (value, meta) {
-                              final idx = value.toInt();
-                              if (idx < 0 || idx >= chartData.length) {
-                                return const SizedBox.shrink();
-                              }
-                              return SideTitleWidget(
-                                meta: meta,
-                                angle: _selectedPeriod == StatsPeriod.daily
-                                    ? 0
-                                    : -0.6,
-                                child: Text(
-                                  chartData[idx]['label'] as String,
-                                  style: typography.labelSmall.copyWith(
-                                    fontSize: chartData.length > 10 ? 9 : null,
+                          child: ListView(
+                            padding: dimens.pagePadding,
+                            children: [
+                              StatisticsPeriodSelector(
+                                selectedPeriod: _controller.selectedPeriod,
+                                onSelected: _controller.setSelectedPeriod,
+                              ),
+                              SizedBox(height: dimens.spacingL),
+                              StatisticsSummaryStrip(
+                                items: [
+                                  StatisticsSummaryItem(
+                                    label: l10n.sessions,
+                                    number: '${_controller.totalSessions}',
+                                  ),
+                                  StatisticsSummaryItem(
+                                    label: l10n.totalFocusTime,
+                                    number: '${_controller.totalFocusMinutes}',
+                                    unit: minuteUnitLabel,
+                                  ),
+                                  StatisticsSummaryItem(
+                                    label: l10n.totalBreakTime,
+                                    number: '${_controller.totalBreakMinutes}',
+                                    unit: minuteUnitLabel,
+                                  ),
+                                  StatisticsSummaryItem(
+                                    label: l10n.averageFocusPerDay,
+                                    number: _controller.averageFocusPerDay
+                                        .toStringAsFixed(0),
+                                    unit: minuteUnitLabel,
+                                  ),
+                                  StatisticsSummaryItem(
+                                    label: l10n.averageBreakPerDay,
+                                    number: _controller.averageBreakPerDay
+                                        .toStringAsFixed(0),
+                                    unit: minuteUnitLabel,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: dimens.spacingL),
+                              if (isWide)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: StatisticsTimeChartCard(
+                                        title: l10n.focusMinutesChartTitle,
+                                        chartData: chartData,
+                                        barWidth: _controller.resolveBarWidth(
+                                          dimens.chartBarWidth,
+                                        ),
+                                        maxY: _controller.chartMaxY(chartData),
+                                        interval: _controller.chartInterval(
+                                          chartData,
+                                        ),
+                                        selectedPeriod:
+                                            _controller.selectedPeriod,
+                                        minuteUnitLabel: minuteUnitLabel,
+                                        emptyLabel: l10n.noDataYet,
+                                      ),
+                                    ),
+                                    SizedBox(width: dimens.spacingL),
+                                    Expanded(
+                                      child: StatisticsCategoryChartCard(
+                                        title: l10n.categoryOverview,
+                                        categories: categoryData,
+                                        minuteUnitLabel: minuteUnitLabel,
+                                        emptyLabel: l10n.noCategoryData,
+                                        sessionsLabel: l10n.sessions,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: mobileCardWidth < 300
+                                            ? 300
+                                            : mobileCardWidth,
+                                        child: StatisticsTimeChartCard(
+                                          title: l10n.focusMinutesChartTitle,
+                                          chartData: chartData,
+                                          barWidth: _controller.resolveBarWidth(
+                                            dimens.chartBarWidth,
+                                          ),
+                                          maxY: _controller.chartMaxY(
+                                            chartData,
+                                          ),
+                                          interval: _controller.chartInterval(
+                                            chartData,
+                                          ),
+                                          selectedPeriod:
+                                              _controller.selectedPeriod,
+                                          minuteUnitLabel: minuteUnitLabel,
+                                          emptyLabel: l10n.noDataYet,
+                                        ),
+                                      ),
+                                      SizedBox(width: dimens.spacingL),
+                                      SizedBox(
+                                        width: mobileCardWidth < 300
+                                            ? 300
+                                            : mobileCardWidth,
+                                        child: StatisticsCategoryChartCard(
+                                          title: l10n.categoryOverview,
+                                          categories: categoryData,
+                                          minuteUnitLabel: minuteUnitLabel,
+                                          emptyLabel: l10n.noCategoryData,
+                                          sessionsLabel: l10n.sessions,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
+                            ],
                           ),
                         ),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: _chartInterval(chartData),
-                        getDrawingHorizontalLine: (value) =>
-                            FlLine(color: AppColors.surface, strokeWidth: 1),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      barGroups: chartData.asMap().entries.map((entry) {
-                        return BarChartGroupData(
-                          x: entry.key,
-                          barRods: [
-                            BarChartRodData(
-                              toY: (entry.value['value'] as int).toDouble(),
-                              color: AppColors.primary,
-                              width: barWidth,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4),
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                      );
+                    },
                   ),
           ),
-        ],
-      ),
-    );
-  }
-
-  double _chartMaxY(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) return 10;
-    final maxVal = data.fold<int>(0, (max, e) {
-      final val = e['value'] as int;
-      return val > max ? val : max;
-    });
-    return (maxVal * 1.3).ceilToDouble().clamp(10, double.infinity);
-  }
-
-  double _chartInterval(List<Map<String, dynamic>> data) {
-    final maxY = _chartMaxY(data);
-    if (maxY <= 30) return 10;
-    if (maxY <= 60) return 15;
-    if (maxY <= 120) return 30;
-    return 60;
-  }
-
-  List<Map<String, dynamic>> _buildChartData(String localeName) {
-    final records = _filteredRecords;
-    final now = DateTime.now();
-
-    switch (_selectedPeriod) {
-      case StatsPeriod.daily:
-        return _buildDailyData(records, now);
-      case StatsPeriod.weekly:
-        return _buildWeeklyData(records, now, localeName);
-      case StatsPeriod.monthly:
-        return _buildMonthlyData(records, now);
-      case StatsPeriod.yearly:
-        return _buildYearlyData(records, now, localeName);
-    }
-  }
-
-  List<Map<String, dynamic>> _buildDailyData(
-    List<StatisticRecord> records,
-    DateTime now,
-  ) {
-    final today = DateTime(now.year, now.month, now.day);
-    final todayRecord = records.where(
-      (r) =>
-          r.date.year == today.year &&
-          r.date.month == today.month &&
-          r.date.day == today.day,
-    );
-
-    if (todayRecord.isEmpty) return [];
-
-    return [
-      {
-        'label': context.statisticsL10n.today,
-        'value': todayRecord.first.focusMinutes,
+        );
       },
-    ];
-  }
-
-  List<Map<String, dynamic>> _buildWeeklyData(
-    List<StatisticRecord> records,
-    DateTime now,
-    String localeName,
-  ) {
-    final today = DateTime(now.year, now.month, now.day);
-    final result = <Map<String, dynamic>>[];
-
-    for (int i = 6; i >= 0; i--) {
-      final date = today.subtract(Duration(days: i));
-      final record = records.where(
-        (r) =>
-            r.date.year == date.year &&
-            r.date.month == date.month &&
-            r.date.day == date.day,
-      );
-
-      result.add({
-        'label': DateFormat('EEE', localeName).format(date).replaceAll('.', ''),
-        'value': record.isEmpty ? 0 : record.first.focusMinutes,
-      });
-    }
-    return result;
-  }
-
-  List<Map<String, dynamic>> _buildMonthlyData(
-    List<StatisticRecord> records,
-    DateTime now,
-  ) {
-    final today = DateTime(now.year, now.month, now.day);
-    final result = <Map<String, dynamic>>[];
-
-    for (int i = 29; i >= 0; i--) {
-      final date = today.subtract(Duration(days: i));
-      final record = records.where(
-        (r) =>
-            r.date.year == date.year &&
-            r.date.month == date.month &&
-            r.date.day == date.day,
-      );
-
-      final label = i % 5 == 0 ? DateFormat('d/M').format(date) : '';
-      result.add({
-        'label': label,
-        'value': record.isEmpty ? 0 : record.first.focusMinutes,
-      });
-    }
-    return result;
-  }
-
-  List<Map<String, dynamic>> _buildYearlyData(
-    List<StatisticRecord> records,
-    DateTime now,
-    String localeName,
-  ) {
-    final result = <Map<String, dynamic>>[];
-
-    for (int i = 11; i >= 0; i--) {
-      int month = now.month - i;
-      int year = now.year;
-      while (month <= 0) {
-        month += 12;
-        year--;
-      }
-
-      final monthRecords = records.where(
-        (r) => r.date.year == year && r.date.month == month,
-      );
-      final totalMinutes = monthRecords.fold<int>(
-        0,
-        (sum, r) => sum + r.focusMinutes,
-      );
-
-      final date = DateTime(year, month);
-      result.add({
-        'label': DateFormat('MMM', localeName).format(date),
-        'value': totalMinutes,
-      });
-    }
-    return result;
+    );
   }
 }

@@ -7,7 +7,6 @@ const Map<String, String> musicEn = {
   'clearAll': 'Clear All',
   'selectAll': 'Select all',
   'unselectAll': 'Unselect all',
-  'audioTypeFilterLabel': 'Audio type',
   'allAudioTypes': 'All types',
   'previousPage': 'Previous page',
   'nextPage': 'Next page',

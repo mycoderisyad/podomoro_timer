@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/l10n.dart';
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
 
 class MusicLibraryToolbar extends StatelessWidget {
   final TextEditingController searchController;

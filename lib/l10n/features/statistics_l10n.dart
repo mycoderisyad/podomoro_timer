@@ -17,7 +17,13 @@ class StatisticsL10n {
   String get year => _base.year;
   String get sessions => _base.sessions;
   String get focus => _base.focus;
-  String get average => _base.average;
+  String get categoryOverview => _base.categoryOverview;
+  String get uncategorizedCategory => _base.uncategorizedCategory;
+  String get noCategoryData => _base.noCategoryData;
+  String get totalFocusTime => _base.totalFocusTime;
+  String get totalBreakTime => _base.totalBreakTime;
+  String get averageFocusPerDay => _base.averageFocusPerDay;
+  String get averageBreakPerDay => _base.averageBreakPerDay;
   String get focusMinutesChartTitle => _base.focusMinutesChartTitle;
   String get noDataYet => _base.noDataYet;
   String get localeName => _base.localeName;

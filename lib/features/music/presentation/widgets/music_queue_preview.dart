@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/l10n.dart';
-import '../../domain/music_track.dart';
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
 
 class MusicQueuePreview extends StatelessWidget {
   final List<MusicTrack> selectedQueue;

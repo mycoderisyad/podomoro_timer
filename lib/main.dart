@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'core/theme/app_theme.dart';
-import 'l10n/app_localizations.dart';
-import 'l10n/l10n.dart';
-import 'pages/timer_page.dart';
-import 'models/app_settings.dart';
-import 'services/background_status_notification_service.dart';
-import 'services/settings_service.dart';
+import 'package:podomoro_timer/core/theme/app_theme.dart';
+import 'package:podomoro_timer/features/timer/presentation/pages/timer_page.dart';
+import 'package:podomoro_timer/l10n/app_localizations.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
+import 'package:podomoro_timer/shared/settings/app_settings.dart';
+import 'package:podomoro_timer/shared/settings/settings_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('en');
   await initializeDateFormatting('id');
-  await BackgroundStatusNotificationService.initialize();
-  final initialSettings = await SettingsService.loadSettings();
+  final settingsRepository = const SharedPreferencesSettingsRepository();
+  final initialSettings = await settingsRepository.loadSettings();
   runApp(MainApp(initialSettings: initialSettings));
 }
 

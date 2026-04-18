@@ -16,6 +16,9 @@ class TimerL10n {
   String get custom => _base.custom;
   String get minutes => _base.minutes;
   String get enterMinutes => _base.enterMinutes;
+  String get sessionNameOptional => _base.sessionNameOptional;
+  String get sessionNameHint => _base.sessionNameHint;
+  String get sessionNameHelper => _base.sessionNameHelper;
   String get apply => _base.apply;
   String get durationHint => _base.durationHint;
   String get start => _base.start;

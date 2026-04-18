@@ -13,7 +13,6 @@ class MusicL10n {
   String get clearAll => _base.clearAll;
   String get selectAll => _base.selectAll;
   String get unselectAll => _base.unselectAll;
-  String get audioTypeFilterLabel => _base.audioTypeFilterLabel;
   String get allAudioTypes => _base.allAudioTypes;
   String get previousPage => _base.previousPage;
   String get nextPage => _base.nextPage;
@@ -41,8 +40,6 @@ class MusicL10n {
   String get noSearchResultsTitle => _base.noSearchResultsTitle;
   String get noSearchResultsSubtitle => _base.noSearchResultsSubtitle;
 
-  String queueSummary(int current, int total) =>
-      _base.queueSummary(current, total);
   String trackCount(int count) => _base.trackCount(count);
   String selectedTrackCount(int count) => _base.selectedTrackCount(count);
   String filteredTrackCount(int count, int currentPage, int totalPages) =>

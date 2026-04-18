@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/l10n.dart';
-import '../../application/music_library_controller.dart';
-import '../../data/audio_library_repository.dart';
-import '../../domain/music_track.dart';
-import '../widgets/music_library_content.dart';
-import '../widgets/music_library_toolbar.dart';
-import '../widgets/music_queue_preview.dart';
+import 'package:podomoro_timer/core/theme/app_colors.dart';
+import 'package:podomoro_timer/core/theme/app_dimens.dart';
+import 'package:podomoro_timer/core/theme/app_typography.dart';
+import 'package:podomoro_timer/features/music/application/music_library_controller.dart';
+import 'package:podomoro_timer/features/music/data/audio_library_repository.dart';
+import 'package:podomoro_timer/features/music/domain/music_track.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/music_library_content.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/music_library_toolbar.dart';
+import 'package:podomoro_timer/features/music/presentation/widgets/music_queue_preview.dart';
+import 'package:podomoro_timer/l10n/l10n.dart';
 
 class MusicSelectionPage extends StatefulWidget {
   final List<MusicTrack>? currentQueue;
@@ -58,9 +58,7 @@ class _MusicSelectionPageState extends State<MusicSelectionPage> {
             dimens.isLandscape || dimens.isCompactHeight;
         final actionButtonInset = hasSelection
             ? dimens.buttonHeight +
-                  (isCompactActionLayout
-                      ? dimens.spacingL
-                      : dimens.spacingXXL)
+                  (isCompactActionLayout ? dimens.spacingL : dimens.spacingXXL)
             : 0.0;
 
         return PopScope(
@@ -131,13 +129,14 @@ class _MusicSelectionPageState extends State<MusicSelectionPage> {
                       ),
                       label: Text(
                         l10n.useTracks(_controller.selectedQueue.length),
-                        style: (isCompactActionLayout
-                                ? typography.titleSmall
-                                : typography.titleMedium)
-                            .copyWith(
-                          color: AppColors.surfaceLight,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            (isCompactActionLayout
+                                    ? typography.titleSmall
+                                    : typography.titleMedium)
+                                .copyWith(
+                                  color: AppColors.surfaceLight,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ),
                   )
